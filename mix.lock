@@ -1,0 +1,4 @@
+%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [], [], "hexpm"},
+  "credo": {:hex, :credo, "0.8.7", "b1aad9cd3aa7acdbaea49765bfc9f1605dc4555023a037dc9ea7a70539615bc8", [], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
+  "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [], [], "hexpm"},
+  "xxhash": {:hex, :erlang_xxhash, "0.2.0", "cb8c1bed97b36b42445e1159fb4d7a3d22d7667fae9272d1e00d101b2f29a87c", [], [], "hexpm"}}
