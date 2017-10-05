@@ -21,36 +21,28 @@ defmodule NLPotion.ML.Word2vec.Index do
   @spec create(path::String.t,
                name::String.t,
                [partitions: pos_integer,
-                size_hint:  pos_integer]) :: {:ok, Index.t} | {:error, any}
+                size_hint:  pos_integer]) :: Index.t
   def create(path, name, options) do
     [partitions: partitions, size_hint:  size_hint] = options
     size_hint = div(size_hint, partitions)
-    with :ok    <- File.mkdir_p(path),
-         tables <- 0..partitions - 1
-                   |> Stream.map(&create_table(name, path, &1, size_hint))
-                   |> Enum.reduce_while({}, fn
-                        {:ok, x}, a -> {:cont, Tuple.append(a, x)}
-                        error, _    -> {:halt, error}
-                      end) do
-      {:ok, %Index{tables: tables, partitions: partitions}}
-    end
+    File.mkdir_p!(path)
+    tables = 0..partitions - 1
+             |> Stream.map(&create_table(name, path, &1, size_hint))
+             |> Enum.reduce({}, &Tuple.append(&2, &1))
+    %Index{tables: tables, partitions: partitions}
   end
 
   @doc """
   opens an existing word2vec index at the specified path
   """
-  @spec open(path::String.t) :: {:ok, Index.t} | {:error, any}
+  @spec open(path::String.t) :: Index.t
   def open(path) do
-    with {:ok, files} <- File.ls(path),
-         tables       <- files
-                         |> Stream.map(&Path.join(path, &1))
-                         |> Stream.map(&open_table/1)
-                         |> Enum.reduce_while({}, fn
-                              {:ok, x}, a -> {:cont, Tuple.append(a, x)}
-                              error, _    -> {:halt, error}
-                            end) do
-      {:ok, %Index{tables: tables, partitions: tuple_size(tables)}}
-    end
+    files = File.ls!(path)
+    tables = files
+             |> Stream.map(&Path.join(path, &1))
+             |> Stream.map(&open_table/1)
+             |> Enum.reduce({}, &Tuple.append(&2, &1))
+    %Index{tables: tables, partitions: tuple_size(tables)}
   end
 
   @doc """
@@ -75,14 +67,20 @@ defmodule NLPotion.ML.Word2vec.Index do
                access:       :read_write,
                type:         :set,
                min_no_slots: size_hint]
-    :dets.open_file(String.to_atom(name), options)
+    case :dets.open_file(String.to_atom(name), options) do
+      {:ok, file}      -> file
+      {:error, reason} -> raise IndexError, reason
+    end
   end
 
   defp open_table(file) do
     name = Path.basename(file, ".dets")
     options = [file:   String.to_charlist(file),
                access: :read]
-    :dets.open_file(String.to_atom(name), options)
+    case :dets.open_file(String.to_atom(name), options) do
+      {:ok, file}      -> file
+      {:error, reason} -> raise IndexError, reason
+    end
   end
 
   @doc """
@@ -90,55 +88,53 @@ defmodule NLPotion.ML.Word2vec.Index do
 
   the index must have been opened using create()
   """
-  @spec compile(index::Index.t, path::String.t) :: :ok | {:error, any}
+  @spec compile(index::Index.t, path::String.t) :: :ok
   def compile(index, path) do
     path
     |> File.stream!()
     |> Task.async_stream(&parse_insert(index, &1), ordered: false)
-    |> Enum.reduce_while(:ok, fn
-          {:ok, _}, _            -> {:cont, :ok}
-          {:error, _} = error, _ -> {:halt, error}
-        end)
-  rescue
-    e in File.Error -> {:error, e}
+    |> Stream.run()
   end
 
   @doc """
   parses and inserts a single word vector text line into a word2vec index
   """
-  @spec parse_insert(index::Index.t, line::String.t) :: :ok | {:error, any}
+  @spec parse_insert(index::Index.t, line::String.t) :: tuple
   def parse_insert(index, line) do
-    with {:ok, record} <- parse_line(line),
-         :ok           <- insert(index, record) do
-      {:ok, record}
-    end
+    record = parse_line(line)
+    insert(index, record)
+    record
   end
 
   @doc """
   parses a word vector line: "<term> <weight> <weight> ..."
   """
-  @spec parse_line(line::String.t) :: {:ok, tuple} | {:error, any}
+  @spec parse_line(line::String.t) :: tuple
   def parse_line(line) do
-    with [term | weights] <- String.split(line, " ") do
-      weights
-      |> Stream.map(&Float.parse/1)
-      |> Enum.reduce_while({:ok, {term}}, fn
-            {v, _}, {_, a} -> {:cont, {:ok, Tuple.append(a, v)}}
-            :error, _      -> {:halt, {:error, "invalid weight"}}
-          end)
-    else
-      _ -> {:error, "invalid term vector line"}
+    [term | weights] = String.split(line, " ")
+    weights
+    |> Stream.map(&parse_weight/1)
+    |> Enum.reduce({term}, &Tuple.append(&2, &1))
+  end
+
+  defp parse_weight(str) do
+    case Float.parse(str) do
+      {value, _} -> value
+      :error     -> raise ArgumentError, "invalid weight: #{str}"
     end
   end
 
   @doc """
   inserts a word vector tuple into a word2vec index
   """
-  @spec insert(index::Index.t, record::tuple) :: :ok | {:error, any}
+  @spec insert(index::Index.t, record::tuple) :: :ok
   def insert(index, record) do
-    index
-    |> get_table(elem(record, 0))
-    |> :dets.insert(record)
+    case index
+         |> get_table(elem(record, 0))
+         |> :dets.insert(record) do
+      :ok              -> :ok
+      {:error, reason} -> raise IndexError, reason
+    end
   end
 
   @doc """
@@ -147,16 +143,14 @@ defmodule NLPotion.ML.Word2vec.Index do
   if found, returns the word vector tuple (without the term)
   otherwise, returns nil
   """
-  @spec lookup(index::Index.t, term::String.t) :: {:ok, tuple} |
-                                                  {:ok, nil} |
-                                                  {:error, any}
+  @spec lookup(index::Index.t, term::String.t) :: tuple | nil
   def lookup(index, term) do
     case index
          |> get_table(term)
          |> :dets.lookup(term) do
-      [result] -> {:ok, Tuple.delete_at(result, 0)}
-      []       -> {:ok, nil}
-      error    -> error
+      [result]         -> Tuple.delete_at(result, 0)
+      []               -> nil
+      {:error, reason} -> raise IndexError, reason
     end
   end
 
@@ -164,4 +158,10 @@ defmodule NLPotion.ML.Word2vec.Index do
     partition = rem(:xxhash.hash32(term), partitions)
     elem(tables, partition)
   end
+end
+
+defmodule IndexError do
+  @moduledoc "DETS index processing error"
+
+  defexception message: "an index error occurred"
 end

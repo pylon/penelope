@@ -22,12 +22,11 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   defp execute(source, target, name, options) do
     options = Keyword.merge @defaults, options
-    with {:ok, index} <- Index.create(target, name, options),
-         :ok          <- Index.compile(index, source) do
+    index = Index.create(target, name, options)
+    try do
+      Index.compile(index, source)
+    after
       Index.close index
-    else
-      {:error, e} -> raise e
-      error       -> raise error
     end
   end
 
