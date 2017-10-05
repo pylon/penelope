@@ -18,11 +18,11 @@ defmodule NLPotion.ML.Word2vec.Index do
 
   files will be created as <path>/<name>_<part>.dets, one per partition
   """
-  @spec create(path::String.t,
+  @spec create!(path::String.t,
                name::String.t,
                [partitions: pos_integer,
                 size_hint:  pos_integer]) :: Index.t
-  def create(path, name, options) do
+  def create!(path, name, options) do
     [partitions: partitions, size_hint:  size_hint] = options
     size_hint = div(size_hint, partitions)
     File.mkdir_p!(path)
@@ -35,8 +35,8 @@ defmodule NLPotion.ML.Word2vec.Index do
   @doc """
   opens an existing word2vec index at the specified path
   """
-  @spec open(path::String.t) :: Index.t
-  def open(path) do
+  @spec open!(path::String.t) :: Index.t
+  def open!(path) do
     files = File.ls!(path)
     tables = files
              |> Stream.map(&Path.join(path, &1))
@@ -88,29 +88,29 @@ defmodule NLPotion.ML.Word2vec.Index do
 
   the index must have been opened using create()
   """
-  @spec compile(index::Index.t, path::String.t) :: :ok
-  def compile(index, path) do
+  @spec compile!(index::Index.t, path::String.t) :: :ok
+  def compile!(index, path) do
     path
     |> File.stream!()
-    |> Task.async_stream(&parse_insert(index, &1), ordered: false)
+    |> Task.async_stream(&parse_insert!(index, &1), ordered: false)
     |> Stream.run()
   end
 
   @doc """
   parses and inserts a single word vector text line into a word2vec index
   """
-  @spec parse_insert(index::Index.t, line::String.t) :: tuple
-  def parse_insert(index, line) do
-    record = parse_line(line)
-    insert(index, record)
+  @spec parse_insert!(index::Index.t, line::String.t) :: tuple
+  def parse_insert!(index, line) do
+    record = parse_line!(line)
+    insert!(index, record)
     record
   end
 
   @doc """
   parses a word vector line: "<term> <weight> <weight> ..."
   """
-  @spec parse_line(line::String.t) :: tuple
-  def parse_line(line) do
+  @spec parse_line!(line::String.t) :: tuple
+  def parse_line!(line) do
     [term | weights] = String.split(line, " ")
     weights
     |> Stream.map(&parse_weight/1)
@@ -127,8 +127,8 @@ defmodule NLPotion.ML.Word2vec.Index do
   @doc """
   inserts a word vector tuple into a word2vec index
   """
-  @spec insert(index::Index.t, record::tuple) :: :ok
-  def insert(index, record) do
+  @spec insert!(index::Index.t, record::tuple) :: :ok
+  def insert!(index, record) do
     case index
          |> get_table(elem(record, 0))
          |> :dets.insert(record) do
@@ -143,8 +143,8 @@ defmodule NLPotion.ML.Word2vec.Index do
   if found, returns the word vector tuple (without the term)
   otherwise, returns nil
   """
-  @spec lookup(index::Index.t, term::String.t) :: tuple | nil
-  def lookup(index, term) do
+  @spec lookup!(index::Index.t, term::String.t) :: tuple | nil
+  def lookup!(index, term) do
     case index
          |> get_table(term)
          |> :dets.lookup(term) do

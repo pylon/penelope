@@ -22,9 +22,9 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   defp execute(source, target, name, options) do
     options = Keyword.merge @defaults, options
-    index = Index.create(target, name, options)
+    index = Index.create!(target, name, options)
     try do
-      Index.compile(index, source)
+      Index.compile!(index, source)
     after
       Index.close index
     end
