@@ -41,13 +41,14 @@ defmodule NLPotion.ML.Word2vec.Index do
   """
   @spec open(path::String.t) :: {:ok, Index.t} | {:error, any}
   def open(path) do
-    with tables <- path
-                   |> File.ls()
-                   |> Stream.map(&open_table/1)
-                   |> Enum.reduce_while({}, fn
-                        {:ok, x}, a -> {:cont, Tuple.append(a, x)}
-                        error, _    -> {:halt, error}
-                      end) do
+    with {:ok, files} <- File.ls(path),
+         tables       <- files
+                         |> Stream.map(&Path.join(path, &1))
+                         |> Stream.map(&open_table/1)
+                         |> Enum.reduce_while({}, fn
+                              {:ok, x}, a -> {:cont, Tuple.append(a, x)}
+                              error, _    -> {:halt, error}
+                            end) do
       {:ok, %Index{tables: tables, partitions: tuple_size(tables)}}
     end
   end
