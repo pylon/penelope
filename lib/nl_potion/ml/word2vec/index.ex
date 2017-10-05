@@ -114,13 +114,13 @@ defmodule NLPotion.ML.Word2vec.Index do
     [term | weights] = String.split(line, " ")
     weights
     |> Stream.map(&parse_weight/1)
-    |> Enum.reduce({term}, &Tuple.append(&2, &1))
+    |> Enum.reduce({term, <<>>}, fn w, {t, ws} -> {t, ws <> w} end)
   end
 
   defp parse_weight(str) do
     case Float.parse(str) do
-      {value, _} -> value
-      :error     -> raise ArgumentError, "invalid weight: #{str}"
+      {value, _remain} -> <<value::float-little-size(32)>>
+      :error           -> raise ArgumentError, "invalid weight: #{str}"
     end
   end
 
@@ -148,9 +148,9 @@ defmodule NLPotion.ML.Word2vec.Index do
     case index
          |> get_table(term)
          |> :dets.lookup(term) do
-      [result]         -> Tuple.delete_at(result, 0)
-      []               -> nil
-      {:error, reason} -> raise IndexError, reason
+      [{_term, weights}] -> weights
+      []                 -> nil
+      {:error, reason}   -> raise IndexError, reason
     end
   end
 
