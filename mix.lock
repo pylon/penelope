@@ -1,4 +1,7 @@
-%{"bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [], [], "hexpm"},
+%{"benchee": {:hex, :benchee, "0.9.0", "433d946b0e4755e186fe564568ead4f593b0d15337fcffa95ed7d5b8a6612670", [], [{:deep_merge, "~> 0.1", [hex: :deep_merge, repo: "hexpm", optional: false]}], "hexpm"},
+  "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [], [], "hexpm"},
   "credo": {:hex, :credo, "0.8.7", "b1aad9cd3aa7acdbaea49765bfc9f1605dc4555023a037dc9ea7a70539615bc8", [], [{:bunt, "~> 0.2.0", [hex: :bunt, repo: "hexpm", optional: false]}], "hexpm"},
+  "deep_merge": {:hex, :deep_merge, "0.1.1", "c27866a7524a337b6a039eeb8dd4f17d458fd40fbbcb8c54661b71a22fffe846", [], [], "hexpm"},
   "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [], [], "hexpm"},
+  "e2qc": {:hex, :e2qc, "1.2.0", "07f47471ffe34ec7d359db5fd5a127ca4c0aa5930d03286e5f76ceaa7ff6426c", [], [], "hexpm"},
   "xxhash": {:hex, :erlang_xxhash, "0.2.0", "cb8c1bed97b36b42445e1159fb4d7a3d22d7667fae9272d1e00d101b2f29a87c", [], [], "hexpm"}}

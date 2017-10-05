@@ -13,9 +13,14 @@ defmodule NLPotion.ML.Word2vec.Index do
 
   alias __MODULE__, as: Index
 
-  defstruct version: 1, partitions: 1, vector_size: 300, tables: []
+  defstruct version:     1,
+            name:        nil,
+            partitions:  1,
+            vector_size: 300,
+            tables:      []
 
   @type t :: %Index{version:     pos_integer,
+                    name:        atom,
                     partitions:  pos_integer,
                     vector_size: pos_integer,
                     tables:      [atom]}
@@ -32,6 +37,7 @@ defmodule NLPotion.ML.Word2vec.Index do
                  size_hint:   pos_integer,
                  vector_size: pos_integer]) :: Index.t
   def create!(path, name, options \\ []) do
+    name        = String.to_atom(name)
     partitions  = Keyword.get(options, :partitions, 1)
     vector_size = Keyword.get(options, :vector_size, 300)
     size_hint   = div(Keyword.get(options, :size_hint, 200_000), partitions)
@@ -47,6 +53,7 @@ defmodule NLPotion.ML.Word2vec.Index do
              |> Enum.reduce([], &(&2 ++ [&1]))
 
     %Index{version:     @version,
+           name:        name,
            partitions:  partitions,
            vector_size: vector_size,
            tables:      tables}
@@ -94,8 +101,8 @@ defmodule NLPotion.ML.Word2vec.Index do
   @doc """
   opens an existing word2vec index at the specified path
   """
-  @spec open!(path::String.t) :: Index.t
-  def open!(path) do
+  @spec open!(path::String.t, [cache_size: pos_integer]) :: Index.t
+  def open!(path, options \\ []) do
     [version:     version,
      name:        name,
      partitions:  partitions,
@@ -103,7 +110,12 @@ defmodule NLPotion.ML.Word2vec.Index do
     tables = 0..partitions - 1
              |> Stream.map(&open_table(path, name, &1))
              |> Enum.reduce([], &(&2 ++ [&1]))
+
+    cache_size = Keyword.get(options, :cache_size, 1_000_000)
+    :e2qc.setup(name, size: cache_size)
+
     %Index{version:     version,
+           name:        name,
            partitions:  partitions,
            vector_size: vector_size,
            tables:      tables}
@@ -207,7 +219,11 @@ defmodule NLPotion.ML.Word2vec.Index do
   otherwise, returns nil
   """
   @spec lookup!(index::Index.t, term::String.t) :: binary
-  def lookup!(%{vector_size: vector_size} = index, term) do
+  def lookup!(%{name: name} = index, term) do
+    :e2qc.cache(name, term, fn -> do_lookup(index, term) end)
+  end
+
+  def do_lookup(%{vector_size: vector_size} = index, term) do
     bit_size = vector_size * 32
     case index
          |> get_table(term)

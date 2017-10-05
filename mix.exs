@@ -24,7 +24,8 @@ defmodule NlPotion.Mixfile do
     [
       {:credo, "~> 0.3", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:xxhash, "~> 0.2.0", hex: :erlang_xxhash}
+      {:xxhash, "~> 0.2.0", hex: :erlang_xxhash},
+      {:e2qc, "~> 1.2"}
     ]
   end
 end
