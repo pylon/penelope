@@ -6,7 +6,7 @@ defmodule NlPotion.Mixfile do
       app: :nl_potion,
       version: "0.1.0",
       elixir: "~> 1.5",
-      compilers: [:nif] ++ Mix.compilers,
+      compilers: [:nif | Mix.compilers],
       start_permanent: Mix.env == :prod,
       deps: deps(),
       dialyzer: [ignore_warnings: ".dialyzerignore",

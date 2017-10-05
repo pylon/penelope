@@ -1,6 +1,6 @@
 defmodule Mix.Tasks.Word2vec.Compile do
   @moduledoc """
-    This task compiles a word vector text file into a set of DETS indexes.
+  This task compiles a word vector text file into a set of DETS indexes.
   """
   @shortdoc @moduledoc
 
@@ -33,16 +33,16 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   defp usage do
     IO.puts """
-    Word2Vec DETS Compiler
-    usage: mix word2vec.compile [options] <source-file> <target-path> <name>
+      Word2Vec DETS Compiler
+      usage: mix word2vec.compile [options] <source-file> <target-path> <name>
 
-    source-file: path to a word2vec standard text file
-    target-path: path to the output directory
-    name:        name of the index to create in the output directory
+      source-file: path to a word2vec standard text file
+      target-path: path to the output directory
+      name:        name of the index to create in the output directory
 
-    options:
-      --partitions: number of partitions (files) to create, default: 1
-      --size_hint:  index hint for the total number of words
+      options:
+        --partitions: number of partitions (files) to create, default: 1
+        --size_hint:  index hint for the total number of words
     """
   end
 end
