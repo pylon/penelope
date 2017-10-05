@@ -8,20 +8,19 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   alias NLPotion.ML.Word2vec.Index, as: Index
 
-  @switches [partitions: :integer, size_hint:  :integer]
-  @defaults [partitions: 1, size_hint: 200_000]
+  @switches [partitions:  :integer,
+             size_hint:   :integer,
+             vector_size: :integer]
 
   def run(argv) do
-    case OptionParser.parse(argv, switches: @switches) do
-      {[partitions: _, size_hint: _] = options,
-       [source, target, name],
-       []} -> execute(source, target, name, options)
+    {options, args, other} = OptionParser.parse(argv, switches: @switches)
+    case {args, other} do
+      {[source, target, name], []} -> execute(source, target, name, options)
       _ -> usage()
     end
   end
 
   defp execute(source, target, name, options) do
-    options = Keyword.merge @defaults, options
     index = Index.create!(target, name, options)
     try do
       Index.compile!(index, source)
@@ -40,8 +39,9 @@ defmodule Mix.Tasks.Word2vec.Compile do
       name:        name of the index to create in the output directory
 
       options:
-        --partitions: number of partitions (files) to create, default: 1
-        --size_hint:  index hint for the total number of words
+        --partitions:  number of partitions (files) to create, default: 1
+        --size_hint:   index hint for the total number of words
+        --vector_size: number of vectors/word, default: 300
     """
   end
 end
