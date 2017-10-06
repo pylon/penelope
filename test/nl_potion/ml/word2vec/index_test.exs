@@ -74,7 +74,7 @@ defmodule AssertionTest do
 
   defp make_vector(numbers) do
     numbers
-    |> Enum.map(&<<&1::float-little-size(32)>>)
+    |> Enum.map(&<<&1::float-native-size(32)>>)
     |> Enum.reduce(&(&2 <> &1))
   end
 end

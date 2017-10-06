@@ -190,7 +190,7 @@ defmodule NLPotion.ML.Word2vec.Index do
 
   defp parse_weight(str) do
     case Float.parse(str) do
-      {value, _remain} -> <<value::float-little-size(32)>>
+      {value, _remain} -> <<value::float-native-size(32)>>
       :error           -> raise ArgumentError, "invalid weight: #{str}"
     end
   end
