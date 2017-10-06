@@ -12,6 +12,7 @@ defmodule NLPotion.ML.Word2vec.Index do
   """
 
   alias __MODULE__, as: Index
+  alias NLPotion.ML.Word2vec.IndexError, as: IndexError
 
   defstruct version:     1,
             name:        nil,
@@ -238,9 +239,10 @@ defmodule NLPotion.ML.Word2vec.Index do
     partition = rem(:xxhash.hash32(term), partitions)
     Enum.at(tables, partition)
   end
+
 end
 
-defmodule IndexError do
+defmodule NLPotion.ML.Word2vec.IndexError do
   @moduledoc "DETS index processing error"
 
   defexception message: "an index error occurred"
