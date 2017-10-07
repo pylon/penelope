@@ -1,14 +1,17 @@
 ERLANG_PATH ?= $(shell erl -eval 'io:format("~s", [lists:concat([code:root_dir(), "/erts-", erlang:system_info(version), "/include"])])' -s init stop -noshell)
 CC = gcc
-CFLAGS = -flat_namespace -undefined suppress -fpic -shared -I$(ERLANG_PATH)
+CFLAGS += -Wall -O3 -flat_namespace -undefined suppress -fpic -shared \
+          -I$(ERLANG_PATH) -lblas
 OUTDIR = ../priv
 
-all:
+all: $(OUTDIR)/penelope.so
 
 clean:
 	$(RM) -r $(OUTDIR)
 
 rebuild: clean all
+
+$(OUTDIR)/penelope.so: blas.c
 
 %.so:
 	mkdir -p $(dir $@)

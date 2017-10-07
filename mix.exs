@@ -26,7 +26,8 @@ defmodule Penelope.Mixfile do
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:xxhash, "~> 0.2.0", hex: :erlang_xxhash},
       {:e2qc, "~> 1.2"},
-      {:benchee, "~> 0.9", only: :dev}
+      {:benchee, "~> 0.9", only: :dev},
+      {:stream_data, "~> 0.3", only: [:test]}
     ]
   end
 end
