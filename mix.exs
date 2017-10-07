@@ -1,9 +1,9 @@
-defmodule NlPotion.Mixfile do
+defmodule Penelope.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :nl_potion,
+      app: :penelope,
       version: "0.1.0",
       elixir: "~> 1.5",
       compilers: [:nif | Mix.compilers],
@@ -25,7 +25,8 @@ defmodule NlPotion.Mixfile do
       {:credo, "~> 0.3", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:xxhash, "~> 0.2.0", hex: :erlang_xxhash},
-      {:e2qc, "~> 1.2"}
+      {:e2qc, "~> 1.2"},
+      {:benchee, "~> 0.9", only: :dev}
     ]
   end
 end

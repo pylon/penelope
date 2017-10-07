@@ -5,8 +5,8 @@ defmodule AssertionTest do
 
   use ExUnit.Case, async: true
 
-  alias NLPotion.ML.Word2vec.Index, as: Index
-  alias NLPotion.ML.Word2vec.IndexError, as: IndexError
+  alias Penelope.ML.Word2vec.Index, as: Index
+  alias Penelope.ML.Word2vec.IndexError, as: IndexError
 
   setup_all do
     input  = "/tmp/penelope_word2vec.txt"

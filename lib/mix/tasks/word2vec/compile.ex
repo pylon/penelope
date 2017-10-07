@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   use Mix.Task
 
-  alias NLPotion.ML.Word2vec.Index, as: Index
+  alias Penelope.ML.Word2vec.Index, as: Index
 
   @switches [partitions:  :integer,
              size_hint:   :integer,

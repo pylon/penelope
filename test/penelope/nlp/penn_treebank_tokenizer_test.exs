@@ -1,8 +1,8 @@
-defmodule NlPotion.PennTreebankTokenizerTest do
+defmodule Penelope.NLP.PennTreebankTokenizerTest do
   @moduledoc false
 
   use ExUnit.Case
-  alias NlPotion.PennTreebankTokenizer, as: Tokenizer
+  alias Penelope.NLP.PennTreebankTokenizer, as: Tokenizer
 
   test "some sample tokenizations" do
     text = ~s(The quick, brown dog jumped over the "fence")
