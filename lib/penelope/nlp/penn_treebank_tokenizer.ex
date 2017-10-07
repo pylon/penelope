@@ -1,4 +1,4 @@
-defmodule NlPotion.PennTreebankTokenizer do
+defmodule Penelope.NLP.PennTreebankTokenizer do
   @moduledoc """
     The tokenization scheme used for the creation of the Penn Treebank corpus.
     See ftp://ftp.cis.upenn.edu/pub/treebank/public_html/tokenization.html.
@@ -7,7 +7,7 @@ defmodule NlPotion.PennTreebankTokenizer do
     common Unicode replacement characters.
   """
 
-  @behaviour NlPotion.Tokenizer
+  @behaviour Penelope.NLP.Tokenizer
 
   def tokenize(text) do
     text

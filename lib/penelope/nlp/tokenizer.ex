@@ -1,4 +1,4 @@
-defmodule NlPotion.Tokenizer do
+defmodule Penelope.NLP.Tokenizer do
   @moduledoc """
     The behaviour implemented by all tokenizers.
   """

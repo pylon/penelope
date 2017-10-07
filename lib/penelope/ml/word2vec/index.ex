@@ -1,4 +1,4 @@
-defmodule NLPotion.ML.Word2vec.Index do
+defmodule Penelope.ML.Word2vec.Index do
   @moduledoc """
   This module represents a word2vec-style vectorset, compiled into a
   set of hash-partitioned DETS files. Each record is a tuple consisting
@@ -12,7 +12,7 @@ defmodule NLPotion.ML.Word2vec.Index do
   """
 
   alias __MODULE__, as: Index
-  alias NLPotion.ML.Word2vec.IndexError, as: IndexError
+  alias Penelope.ML.Word2vec.IndexError, as: IndexError
 
   defstruct version:     1,
             name:        nil,
@@ -242,7 +242,7 @@ defmodule NLPotion.ML.Word2vec.Index do
 
 end
 
-defmodule NLPotion.ML.Word2vec.IndexError do
+defmodule Penelope.ML.Word2vec.IndexError do
   @moduledoc "DETS index processing error"
 
   defexception message: "an index error occurred"

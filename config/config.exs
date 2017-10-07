@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :nl_potion, key: :value
+#     config :penelope, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:nl_potion, :key)
+#     Application.get_env(:penelope, :key)
 #
 # You can also configure a 3rd-party app:
 #
