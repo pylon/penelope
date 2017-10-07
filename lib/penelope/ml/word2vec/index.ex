@@ -73,7 +73,7 @@ defmodule Penelope.ML.Word2vec.Index do
          :ok         <- :dets.insert(file, {:header, header}) do
       :dets.close file
     else
-      {:error, reason} -> raise IndexError, to_string(reason)
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -85,7 +85,7 @@ defmodule Penelope.ML.Word2vec.Index do
                min_no_slots: size_hint]
     case :dets.open_file(name, options) do
       {:ok, file}      -> file
-      {:error, reason} -> raise IndexError, to_string(reason)
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -135,7 +135,7 @@ defmodule Penelope.ML.Word2vec.Index do
       :dets.close file
       header
     else
-      {:error, reason} -> raise IndexError, to_string(reason)
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -143,7 +143,7 @@ defmodule Penelope.ML.Word2vec.Index do
     {name, file} = table_file(path, name, partition)
     case :dets.open_file(name, file: file, access: :read) do
       {:ok, file}      -> file
-      {:error, reason} -> raise IndexError, to_string(reason)
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -210,7 +210,7 @@ defmodule Penelope.ML.Word2vec.Index do
          |> get_table(elem(record, 0))
          |> :dets.insert(record) do
       :ok              -> :ok
-      {:error, reason} -> raise IndexError, to_string(reason)
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -232,7 +232,7 @@ defmodule Penelope.ML.Word2vec.Index do
          |> :dets.lookup(term) do
       [{_term, vector}] -> vector
       []                -> <<0::size(bit_size)>>
-      {:error, reason}  -> raise IndexError, to_string(reason)
+      {:error, reason}  -> raise IndexError, inspect(reason)
     end
   end
 

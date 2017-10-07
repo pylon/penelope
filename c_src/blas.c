@@ -15,28 +15,15 @@
 /*-------------------[        Global Prototypes        ]-------------------*/
 /*-------------------[        Module Variables         ]-------------------*/
 /*-------------------[        Module Prototypes        ]-------------------*/
-static ERL_NIF_TERM nif_sscal (ErlNifEnv*, int, const ERL_NIF_TERM[]);
-static ERL_NIF_TERM nif_saxpy (ErlNifEnv*, int, const ERL_NIF_TERM[]);
 /*-------------------[         Implementation          ]-------------------*/
-static ErlNifFunc nif_map[] = {
-   {"sscal", 2, nif_sscal},
-   {"saxpy", 3, nif_saxpy}
-};
-ERL_NIF_INIT(
-   Elixir.Penelope.ML.Vector.BLAS,
-   nif_map,
-   NULL,
-   NULL,
-   NULL,
-   NULL);
-/*-----------< FUNCTION: nif_sscal >-----------------------------------------
+/*-----------< FUNCTION: nif_blas_sscal >------------------------------------
 // Purpose:    BLAS sscal wrapper
 //             computes y = ax
 // Parameters: a - scalar to multiply (float)
 //             x - vector to multiply (binary float vector)
 // Returns:    result of ax (binary float vector)
 ---------------------------------------------------------------------------*/
-static ERL_NIF_TERM nif_sscal(
+ERL_NIF_TERM nif_blas_sscal(
    ErlNifEnv*         env,
    int                argc,
    const ERL_NIF_TERM argv[])
@@ -60,7 +47,7 @@ static ERL_NIF_TERM nif_sscal(
       1);
    return enif_make_binary(env, &r);
 }
-/*-----------< FUNCTION: nif_saxpy >-----------------------------------------
+/*-----------< FUNCTION: nif_blas_saxpy >------------------------------------
 // Purpose:    BLAS saxpy wrapper
 //             computes z = ax + y
 // Parameters: a - scalar to multiply (float)
@@ -68,7 +55,7 @@ static ERL_NIF_TERM nif_sscal(
 //             y - vector to add (binary float vector)
 // Returns:    result of ax + y (binary float vector)
 ---------------------------------------------------------------------------*/
-static ERL_NIF_TERM nif_saxpy(
+ERL_NIF_TERM nif_blas_saxpy(
    ErlNifEnv*         env,
    int                argc,
    const ERL_NIF_TERM argv[])

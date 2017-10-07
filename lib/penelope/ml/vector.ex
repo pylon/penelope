@@ -5,7 +5,7 @@ defmodule Penelope.ML.Vector do
   values. Math is done via the BLAS interface, wrapped in a NIF module.
   """
 
-  alias Penelope.ML.Vector.BLAS, as: BLAS
+  alias Penelope.NIF, as: NIF
 
   @type t::binary
 
@@ -52,35 +52,13 @@ defmodule Penelope.ML.Vector do
 
   @doc "computes y = ax"
   @spec scale(x::t, a::float) :: t
-  def scale(x, a), do: BLAS.sscal(a / 1, x)
+  def scale(x, a), do: NIF.blas_sscal(a / 1, x)
 
   @doc "computes z = x + y"
   @spec add(x::t, y::t) :: t
-  def add(x, y), do: BLAS.saxpy(1.0, x, y)
+  def add(x, y), do: NIF.blas_saxpy(1.0, x, y)
 
   @doc "computes z = ax + y"
   @spec scale_add(y::t, a::float, x::t) :: t
-  def scale_add(y, a, x), do: BLAS.saxpy(a / 1, x, y)
-
-  defmodule BLAS do
-    @moduledoc """
-    BLAS NIF wrapper
-
-    see http://www.netlib.org/blas/ for more information
-    """
-
-    @on_load :init
-
-    def init do
-      :ok = :erlang.load_nif('./priv/penelope', 0)
-    end
-
-    def sscal(_a, _x) do
-      :erlang.nif_error(:nif_library_not_loaded)
-    end
-
-    def saxpy(_a, _x, _y) do
-      :erlang.nif_error(:nif_library_not_loaded)
-    end
-  end
+  def scale_add(y, a, x), do: NIF.blas_saxpy(a / 1, x, y)
 end

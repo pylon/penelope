@@ -11,7 +11,7 @@ clean:
 
 rebuild: clean all
 
-$(OUTDIR)/penelope.so: blas.c
+$(OUTDIR)/penelope.so: blas.c init.c
 
 %.so:
 	mkdir -p $(dir $@)
