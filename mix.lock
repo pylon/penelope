@@ -4,4 +4,5 @@
   "deep_merge": {:hex, :deep_merge, "0.1.1", "c27866a7524a337b6a039eeb8dd4f17d458fd40fbbcb8c54661b71a22fffe846", [], [], "hexpm"},
   "dialyxir": {:hex, :dialyxir, "0.5.1", "b331b091720fd93e878137add264bac4f644e1ddae07a70bf7062c7862c4b952", [], [], "hexpm"},
   "e2qc": {:hex, :e2qc, "1.2.0", "07f47471ffe34ec7d359db5fd5a127ca4c0aa5930d03286e5f76ceaa7ff6426c", [], [], "hexpm"},
+  "stream_data": {:hex, :stream_data, "0.3.0", "cbfc8e3212f64683615657ea27804126a42ded634adfdfee258bf087ee605d46", [], [], "hexpm"},
   "xxhash": {:hex, :erlang_xxhash, "0.2.0", "cb8c1bed97b36b42445e1159fb4d7a3d22d7667fae9272d1e00d101b2f29a87c", [], [], "hexpm"}}

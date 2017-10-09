@@ -21,3 +21,6 @@ erl_crash.dump
 
 .idea/
 *.iml
+
+# Private files
+/priv/penelope.so

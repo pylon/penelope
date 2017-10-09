@@ -1,12 +1,32 @@
 # Penelope
 
-**TODO: Add description**
+Natural Language Processing (NLP) and Machine Learning (ML) library for Elixir.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `penelope` to your list of dependencies in `mix.exs`:
+### BLAS
+This package requires an implementation of BLAS for efficient matrix math. It
+can be installed as follows:
 
+#### OSX
+[openblas](http://www.openblas.net/) is the easiest way to install blas. It
+can be installed via homebrew.
+
+```
+brew install openblas
+```
+
+Then, you will need to add the `CFLAGS` and `LDFLAGS` variables for openblas
+to your environment.
+
+#### Ubuntu
+Install `libblas-dev` via apt.
+
+```
+sudo apt install libblas-dev
+```
+
+### Hex
 ```elixir
 def deps do
   [
@@ -14,8 +34,3 @@ def deps do
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/penelope](https://hexdocs.pm/penelope).
-

@@ -12,6 +12,7 @@ defmodule Penelope.ML.Word2vec.Index do
   """
 
   alias __MODULE__, as: Index
+  alias Penelope.ML.Vector, as: Vector
   alias Penelope.ML.Word2vec.IndexError, as: IndexError
 
   defstruct version:     1,
@@ -72,7 +73,7 @@ defmodule Penelope.ML.Word2vec.Index do
          :ok         <- :dets.insert(file, {:header, header}) do
       :dets.close file
     else
-      {:error, reason} -> raise IndexError, reason
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -84,7 +85,7 @@ defmodule Penelope.ML.Word2vec.Index do
                min_no_slots: size_hint]
     case :dets.open_file(name, options) do
       {:ok, file}      -> file
-      {:error, reason} -> raise IndexError, reason
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -134,7 +135,7 @@ defmodule Penelope.ML.Word2vec.Index do
       :dets.close file
       header
     else
-      {:error, reason} -> raise IndexError, reason
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -142,7 +143,7 @@ defmodule Penelope.ML.Word2vec.Index do
     {name, file} = table_file(path, name, partition)
     case :dets.open_file(name, file: file, access: :read) do
       {:ok, file}      -> file
-      {:error, reason} -> raise IndexError, reason
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -170,7 +171,7 @@ defmodule Penelope.ML.Word2vec.Index do
   @doc """
   parses and inserts a single word vector text line into a word2vec index
   """
-  @spec parse_insert!(index::Index.t, line::String.t) :: {String.t, binary}
+  @spec parse_insert!(index::Index.t, line::String.t) :: {String.t, Vector.t}
   def parse_insert!(index, line) do
     record = parse_line!(line)
     insert!(index, record)
@@ -180,17 +181,17 @@ defmodule Penelope.ML.Word2vec.Index do
   @doc """
   parses a word vector line: "<term> <weight> <weight> ..."
   """
-  @spec parse_line!(line::String.t) :: {String.t, binary}
+  @spec parse_line!(line::String.t) :: {String.t, Vector.t}
   def parse_line!(line) do
     [term | weights] = String.split(line, " ")
-    weights
-    |> Stream.map(&parse_weight/1)
-    |> Enum.reduce({term, <<>>}, fn w, {t, ws} -> {t, ws <> w} end)
+    {term, weights
+           |> Enum.map(&parse_weight/1)
+           |> Vector.from_list()}
   end
 
   defp parse_weight(str) do
     case Float.parse(str) do
-      {value, _remain} -> <<value::float-native-size(32)>>
+      {value, _remain} -> value
       :error           -> raise ArgumentError, "invalid weight: #{str}"
     end
   end
@@ -198,7 +199,7 @@ defmodule Penelope.ML.Word2vec.Index do
   @doc """
   inserts a word vector tuple into a word2vec index
   """
-  @spec insert!(index::Index.t, record::{String.t, binary}) :: :ok
+  @spec insert!(index::Index.t, record::{String.t, Vector.t}) :: :ok
   def insert!(%Index{vector_size: vector_size} = index,
               {_term, vector} = record) do
     actual_size = div(byte_size(vector), 4)
@@ -209,7 +210,7 @@ defmodule Penelope.ML.Word2vec.Index do
          |> get_table(elem(record, 0))
          |> :dets.insert(record) do
       :ok              -> :ok
-      {:error, reason} -> raise IndexError, reason
+      {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
 
@@ -219,7 +220,7 @@ defmodule Penelope.ML.Word2vec.Index do
   if found, returns the word vector (no term)
   otherwise, returns nil
   """
-  @spec lookup!(index::Index.t, term::String.t) :: binary
+  @spec lookup!(index::Index.t, term::String.t) :: Vector.t
   def lookup!(%{name: name} = index, term) do
     :e2qc.cache(name, term, fn -> do_lookup(index, term) end)
   end
@@ -231,7 +232,7 @@ defmodule Penelope.ML.Word2vec.Index do
          |> :dets.lookup(term) do
       [{_term, vector}] -> vector
       []                -> <<0::size(bit_size)>>
-      {:error, reason}  -> raise IndexError, reason
+      {:error, reason}  -> raise IndexError, inspect(reason)
     end
   end
 
