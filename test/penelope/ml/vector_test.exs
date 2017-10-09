@@ -55,11 +55,13 @@ defmodule Penelope.ML.VectorTest do
       # save the vector to ensure no memory overwrite
       vx = from_list(x)
       vy = scale(vx, a)
+
       assert vx === from_list(x)
       assert size(vy) === size(vx)
-      ([x, to_list(vy)]
-       |> Enum.zip()
-       |> Enum.each(fn {x, y} -> assert float_equals(x * a, y) end))
+
+      [x, to_list(vy)]
+      |> Enum.zip()
+      |> Enum.each(fn {x, y} -> assert float_equals(x * a, y) end)
     end
   end
 
@@ -84,12 +86,14 @@ defmodule Penelope.ML.VectorTest do
       vx = from_list(x)
       vy = from_list(y)
       vz = add(vx, vy)
+
       assert vx === from_list(x)
       assert vy === from_list(y)
       assert size(vz) === n
-      ([x, y, to_list(vz)]
-       |> Enum.zip()
-       |> Enum.each(fn {x, y, z} -> assert float_equals(x + y, z) end))
+
+      [x, y, to_list(vz)]
+      |> Enum.zip()
+      |> Enum.each(fn {x, y, z} -> assert float_equals(x + y, z) end)
     end
   end
 
@@ -116,12 +120,14 @@ defmodule Penelope.ML.VectorTest do
       vx = from_list(x)
       vy = from_list(y)
       vz = scale_add(vy, a, vx)
+
       assert vx === from_list(x)
       assert vy === from_list(y)
       assert size(vz) === n
-      ([x, y, to_list(vz)]
-       |> Enum.zip()
-       |> Enum.each(fn {x, y, z} -> assert float_equals(a * x + y, z) end))
+
+      [x, y, to_list(vz)]
+      |> Enum.zip()
+      |> Enum.each(fn {x, y, z} -> assert float_equals(a * x + y, z) end)
     end
   end
 
