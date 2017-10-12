@@ -1,21 +1,34 @@
 /****************************************************************************
  *
- * MODULE:  blas.c
+ * MODULE:  blas.cpp
  * PURPOSE: nifs for basic linear algebra subprograms (CBLAS)
  *
  ***************************************************************************/
 /*-------------------[       Pre Include Defines       ]-------------------*/
 /*-------------------[      Library Include Files      ]-------------------*/
-#include <string.h>
-#include <erl_nif.h>
-#include <cblas.h>
+#ifdef __APPLE__
+#  include <Accelerate/Accelerate.h>
+#else
+#  include <cblas.h>
+#endif
 /*-------------------[      Project Include Files      ]-------------------*/
+#include "penelope.hpp"
 /*-------------------[      Macros/Constants/Types     ]-------------------*/
 /*-------------------[        Global Variables         ]-------------------*/
 /*-------------------[        Global Prototypes        ]-------------------*/
 /*-------------------[        Module Variables         ]-------------------*/
 /*-------------------[        Module Prototypes        ]-------------------*/
 /*-------------------[         Implementation          ]-------------------*/
+/*-----------< FUNCTION: nif_blas_init >-------------------------------------
+// Purpose:    blas module initialization
+// Parameters: env - erlang environment
+// Returns:    1 if successful
+//             0 otherwise
+---------------------------------------------------------------------------*/
+int nif_blas_init (ErlNifEnv* env)
+{
+   return 1;
+}
 /*-----------< FUNCTION: nif_blas_sscal >------------------------------------
 // Purpose:    BLAS sscal wrapper
 //             computes y = ax

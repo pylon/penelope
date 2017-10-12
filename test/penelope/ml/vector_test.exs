@@ -7,6 +7,7 @@ defmodule Penelope.ML.VectorTest do
 
   import ExUnitProperties
   import Penelope.ML.Vector
+  import Penelope.TestUtility
 
   alias StreamData, as: Gen
 
@@ -129,14 +130,5 @@ defmodule Penelope.ML.VectorTest do
       |> Enum.zip()
       |> Enum.each(fn {x, y, z} -> assert float_equals(a * x + y, z) end)
     end
-  end
-
-  defp gen_float() do
-    Gen.map(Gen.tuple({Gen.integer(), Gen.uniform_float()}),
-            fn {i, f} -> i * f end)
-  end
-
-  defp float_equals(a, b) do
-    abs(a - b) < 1.0e-5
   end
 end

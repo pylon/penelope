@@ -3,14 +3,18 @@ defmodule Penelope.Mixfile do
 
   def project do
     [
-      app: :penelope,
-      version: "0.1.0",
-      elixir: "~> 1.5",
-      compilers: [:nif | Mix.compilers],
+      app:             :penelope,
+      name:            "Penelope",
+      version:         "0.1.0",
+      elixir:          "~> 1.5",
+      compilers:       ["nif" | Mix.compilers],
+      aliases:         [clean: ["clean", "clean.nif"]],
+      elixirc_paths:   elixirc_paths(Mix.env),
       start_permanent: Mix.env == :prod,
-      deps: deps(),
-      dialyzer: [ignore_warnings: ".dialyzerignore",
-                 plt_add_deps: :transitive]
+      deps:            deps(),
+      dialyzer:        [ignore_warnings: ".dialyzerignore",
+                        plt_add_deps:    :transitive],
+      docs:            [extras: ["README.md"]]
     ]
   end
 
@@ -20,6 +24,9 @@ defmodule Penelope.Mixfile do
     ]
   end
 
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
+
   defp deps do
     [
       {:credo, "~> 0.3", only: [:dev, :test]},
@@ -27,14 +34,22 @@ defmodule Penelope.Mixfile do
       {:xxhash, "~> 0.2.0", hex: :erlang_xxhash},
       {:e2qc, "~> 1.2"},
       {:benchee, "~> 0.9", only: :dev},
-      {:stream_data, "~> 0.3", only: [:test]}
+      {:stream_data, "~> 0.3", only: [:test]},
+      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
   end
 end
 
 defmodule Mix.Tasks.Compile.Nif do
   def run(_args) do
-    {result, _errcode} = System.cmd("make", ["-s", "-C", "c_src"])
+    {result, _errcode} = System.cmd("make", ["-C", "c_src"])
+    IO.binwrite(result)
+  end
+end
+
+defmodule Mix.Tasks.Clean.Nif do
+  def run(_args) do
+    {result, _errcode} = System.cmd("make", ["-C", "c_src", "clean"])
     IO.binwrite(result)
   end
 end
