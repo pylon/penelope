@@ -11,11 +11,20 @@ defmodule Penelope.Mixfile do
       aliases:         [clean: ["clean", "clean.nif"]],
       elixirc_paths:   elixirc_paths(Mix.env),
       start_permanent: Mix.env == :prod,
+      description:     description(),
       deps:            deps(),
+      package:         package(),
       dialyzer:        [ignore_warnings: ".dialyzerignore",
                         plt_add_deps:    :transitive],
       docs:            [extras: ["README.md"]]
     ]
+  end
+
+  defp description do
+    """
+    Natural Language Processing (NLP) and Machine Learning (ML) library for
+    Elixir.
+    """
   end
 
   def application do
@@ -37,6 +46,16 @@ defmodule Penelope.Mixfile do
       {:stream_data, "~> 0.3", only: [:test]},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
+  end
+
+  defp package do
+  [
+    files:       ["mix.exs", "README.md", "lib", "c_src"],
+    maintainers: ["Brent M. Spell", "Josh Ziegler"],
+    licenses:    ["Apache 2.0"],
+    links:       %{"GitHub" => "https://github.com/pylon/penelope",
+                   "Docs"   => "http://hexdocs.pm/penelope/"}
+   ]
   end
 end
 
