@@ -395,7 +395,7 @@ SVM_MODEL* erl2svm_model (ErlNifEnv* env, ERL_NIF_TERM params)
       CHECK(enif_get_map_value(env, params, key, &value), "missing_rho");
       CHECK(enif_inspect_binary(env, value, &vector), "invalid_rho");
       model->rho = nif_alloc<double>(vector.size / sizeof(float));
-      for (int i = 0; i < vector.size / sizeof(float); i++)
+      for (int i = 0; i < (int)(vector.size / sizeof(float)); i++)
          model->rho[i] = ((float*)vector.data)[i];
       // extract probA
       key = enif_make_atom(env, "prob_a");
@@ -403,7 +403,7 @@ SVM_MODEL* erl2svm_model (ErlNifEnv* env, ERL_NIF_TERM params)
       if (!enif_is_identical(value, enif_make_atom(env, "nil"))) {
          CHECK(enif_inspect_binary(env, value, &vector), "invalid_prob_a");
          model->probA = nif_alloc<double>(vector.size / sizeof(float));
-         for (int i = 0; i < vector.size / sizeof(float); i++)
+         for (int i = 0; i < (int)(vector.size / sizeof(float)); i++)
             model->probA[i] = ((float*)vector.data)[i];
       }
       // extract probB
@@ -412,7 +412,7 @@ SVM_MODEL* erl2svm_model (ErlNifEnv* env, ERL_NIF_TERM params)
       if (!enif_is_identical(value, enif_make_atom(env, "nil"))) {
          CHECK(enif_inspect_binary(env, value, &vector), "invalid_prob_b");
          model->probB = nif_alloc<double>(vector.size / sizeof(float));
-         for (int i = 0; i < vector.size / sizeof(float); i++)
+         for (int i = 0; i < (int)(vector.size / sizeof(float)); i++)
             model->probB[i] = ((float*)vector.data)[i];
       }
       return model;
@@ -480,7 +480,7 @@ void erl2svm_params (
          CHECKALLOC(enif_map_iterator_create(
             env, value, &iter, ERL_NIF_MAP_ITERATOR_FIRST));
          try {
-            for (int i = 0; i < weight_count; i++) {
+            for (int i = 0; i < (int)weight_count; i++) {
                CHECK(enif_map_iterator_get_pair(
                   env, &iter, &key, &value),
                   "invalid_weight");
@@ -527,14 +527,14 @@ void erl2svm_params (
 SVM_NODE** erl2svm_features (ErlNifEnv* env, ERL_NIF_TERM x, unsigned m) {
    SVM_NODE** nodes = nif_alloc<SVM_NODE*>(m);
    try {
-      for (int i = 0; i < m; i++) {
+      for (int i = 0; i < (int)m; i++) {
          ERL_NIF_TERM head;
          CHECK(enif_get_list_cell(env, x, &head, &x), "missing_features");
          nodes[i] = erl2svm_feature(env, head);
       }
       return nodes;
    } catch (...) {
-      for (int i = 0; i < m; i++)
+      for (int i = 0; i < (int)m; i++)
          nif_free(nodes[i]);
       nif_free(nodes);
       throw;
@@ -571,7 +571,7 @@ SVM_NODE* erl2svm_feature (ErlNifEnv* env, ERL_NIF_TERM x) {
 double* erl2svm_targets (ErlNifEnv* env, ERL_NIF_TERM y, unsigned m) {
    double* targets = nif_alloc<double>(m);
    try {
-      for (int i = 0; i < m; i++) {
+      for (int i = 0; i < (int)m; i++) {
          // get the list head and advance the tail
          ERL_NIF_TERM head;
          CHECK(enif_get_list_cell(env, y, &head, &y), "missing_target");
@@ -798,7 +798,6 @@ void erl2svm_free_model (SVM_MODEL* model)
    nif_free(model->rho);
    nif_free(model->probA);
    nif_free(model->probB);
-   nif_free(model->sv_indices);
    nif_free(model->label);
    nif_free(model->nSV);
    nif_free(model);
