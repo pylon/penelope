@@ -8,7 +8,7 @@ jobs:
     steps:
       - checkout
 
-      - run: apt-get install libsvm
+      - run: sudo apt-get install libsvm
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
