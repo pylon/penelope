@@ -3,6 +3,13 @@
  * MODULE:  svm.cpp
  * PURPOSE: nifs for libsvm
  *
+ * for abbreviated names:
+ * . m is the number of training examples
+ * . n is the number of features
+ * . k is the number of classes
+ * . x is a feature matrix/vector/value
+ * . y is a class vector/value
+ *
  * see https://github.com/cjlin1/libsvm for details
  *
  ***************************************************************************/

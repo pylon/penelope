@@ -21,13 +21,13 @@ defmodule Penelope.ML.SVM.Classifier do
   |--------------|------------------------------------------|---------|
   |`kernel`      |one of `:linear`/`:rbf`/`:poly`/`:sigmoid`|`:linear`|
   |`degree`      |polynomial degree                         |3        |
-  |`gamma`       |training example reach                    |1.0      |
+  |`gamma`       |training example reach - `:auto` for 1/N  |`:auto`  |
   |`coef0`       |independent term                          |0.0      |
   |`c`           |error term penalty                        |a        |
   |`weights`     |class weights map - `:auto` for balanced  |`:auto`  |
   |`epsilon`     |tolerance for stopping                    |0.001    |
   |`cache_size`  |kernel cache size, in MB                  |1        |
-  |`shrinking?`  |use the shrinking heuristic               |true     |
+  |`shrinking?`  |use the shrinking heuristic?              |true     |
   |`probability?`|enable class probabilities?               |false    |
   """
   @spec fit(context::map, x::[Vector.t], y::[integer], options::keyword)
@@ -80,7 +80,7 @@ defmodule Penelope.ML.SVM.Classifier do
   end
 
   defp fit_params(x, y, options) do
-    gamma = with :auto <- Keyword.get(options, :gamma, 1.0) do
+    gamma = with :auto <- Keyword.get(options, :gamma, :auto) do
       auto_gamma(x)
     end
     weights = with :auto <- Keyword.get(options, :weights, :auto) do
@@ -100,7 +100,7 @@ defmodule Penelope.ML.SVM.Classifier do
     }
   end
 
-  defp auto_gamma([x]) do
+  defp auto_gamma([x | _]) do
     1.0 / Vector.size(x)
   end
 

@@ -15,9 +15,6 @@ BLAS is built into OSX, so you only need to install libsvm.
 brew install libsvm
 ```
 
-Then, you will need to add the `CFLAGS` and `LDFLAGS` variables for openblas
-to your environment.
-
 #### Ubuntu
 Install `libblas-dev` and `libsvm` via apt.
 
