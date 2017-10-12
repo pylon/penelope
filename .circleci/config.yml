@@ -11,6 +11,7 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
+      - run: rm deps/xxhash/c_src/*.o
       - run: mix test
       - run: mix dialyzer --halt-exit-status
       - run: mix credo --strict
