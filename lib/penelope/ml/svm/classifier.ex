@@ -46,9 +46,9 @@ defmodule Penelope.ML.SVM.Classifier do
   These parameters are simple elixir objects and can later be passed to
   `compile` to add the model back to the context.
   """
-  @spec inspect(%{svm_model: reference}) :: map
-  def inspect(%{svm_model: svm_model}) do
-    NIF.svm_inspect(svm_model)
+  @spec export(%{svm_model: reference}) :: map
+  def export(%{svm_model: svm_model}) do
+    NIF.svm_export(svm_model)
   end
 
   @doc """

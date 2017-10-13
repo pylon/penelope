@@ -25,7 +25,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
            |> Enum.map(&Vector.from_list/1)
   @y_train [3, 2, 1, 3, 2, 1]
 
-  test "fit/inspect/compile" do
+  test "fit/export/compile" do
     assert_raise fn ->
       Classifier.fit %{}, [hd(@x_train)], @y_train
     end
@@ -80,10 +80,10 @@ defmodule Penelope.ML.SVM.ClassifierTest do
       ]
       {context, _x, _y} = Classifier.fit %{}, @x_train, @y_train, options
 
-      params = Classifier.inspect(context)
+      params = Classifier.export(context)
       assert params === context
                         |> Classifier.compile(params)
-                        |> Classifier.inspect()
+                        |> Classifier.export()
     end
   end
 
@@ -118,12 +118,12 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   end
 
   @tag :stress
-  test "inspect/compile stress" do
+  test "export/compile stress" do
     {context, _x, _y} =
       Classifier.fit(%{}, @x_train, @y_train, probability?: true)
 
     for _ <- 1..5_000_000 do
-      params = Classifier.inspect(context)
+      params = Classifier.export(context)
       Classifier.compile(context, params)
     end
   end
