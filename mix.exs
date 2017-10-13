@@ -41,7 +41,7 @@ defmodule Penelope.Mixfile do
       {:e2qc, "~> 1.2"},
       {:stream_data, "~> 0.3", only: [:test]},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
-      {:dogma, "~> 0.1", only: [:dev]},
+      {:dogma, "~> 0.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:benchee, "~> 0.9", only: :dev, runtime: false},
       {:ex_doc, "~> 0.18", only: :dev, runtime: false}
