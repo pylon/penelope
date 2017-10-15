@@ -151,13 +151,13 @@ ERL_NIF_TERM nif_svm_train (
    erl2svm_free_params(&params);
    return result;
 }
-/*-----------< FUNCTION: nif_svm_inspect >-----------------------------------
+/*-----------< FUNCTION: nif_svm_export >------------------------------------
 // Purpose:    extracts model parameters from an SVM resource,
 //             which is useful for persisting a model externally
 // Parameters: model - erlang resource wrapping the trained model
 // Returns:    a map containing the model parameters
 ---------------------------------------------------------------------------*/
-ERL_NIF_TERM nif_svm_inspect (
+ERL_NIF_TERM nif_svm_export (
    ErlNifEnv*         env,
    int                argc,
    const ERL_NIF_TERM argv[])
@@ -316,7 +316,7 @@ void erl2svm_problem (
 /*-----------< FUNCTION: erl2svm_model >-------------------------------------
 // Purpose:    constrcts an SVM model structure from a map representation
 // Parameters: env    - current erlang environment
-//             params - model parameters (constructed via nif_svm_inspect)
+//             params - model parameters (constructed via nif_svm_export)
 // Returns:    pointer to the allocated and constructed model
 ---------------------------------------------------------------------------*/
 SVM_MODEL* erl2svm_model (ErlNifEnv* env, ERL_NIF_TERM params)

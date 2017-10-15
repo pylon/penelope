@@ -12,6 +12,6 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
-      - run: rm deps/xxhash/c_src/*.o
       - run: mix test
       - run: mix credo --strict
+      - run: mix dogma

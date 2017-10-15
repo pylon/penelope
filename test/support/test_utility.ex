@@ -22,7 +22,7 @@ defmodule Penelope.TestUtility do
   @doc """
   stream generator for strictly positive random floats
   """
-  def gen_pos_float() do
+  def gen_pos_float do
     gen_non_neg_float()
     |> Gen.map(fn f -> f + 1.0e-6 end)
   end
@@ -30,7 +30,7 @@ defmodule Penelope.TestUtility do
   @doc """
   stream generator for positive or 0.0 random floats
   """
-  def gen_non_neg_float() do
+  def gen_non_neg_float do
     gen_float()
     |> Gen.map(fn f -> abs(f) end)
   end
@@ -38,7 +38,7 @@ defmodule Penelope.TestUtility do
   @doc """
   stream generator for random floats
   """
-  def gen_float() do
+  def gen_float do
     {Gen.integer(), Gen.uniform_float()}
     |> Gen.tuple()
     |> Gen.map(fn {i, f} -> i * f end)

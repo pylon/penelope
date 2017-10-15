@@ -114,7 +114,14 @@ defmodule Penelope.ML.Word2vec.Index do
              |> Enum.reduce([], &(&2 ++ [&1]))
 
     cache_size = Keyword.get(options, :cache_size, 1_000_000)
-    :e2qc.setup(name, size: cache_size)
+    try do
+      :e2qc.setup(name, size: cache_size)
+    rescue
+      e in ErlangError -> case e do
+        %ErlangError{original: :already_exists} -> :ok
+        _ -> reraise e, System.stacktrace
+      end
+    end
 
     %Index{version:     version,
            name:        name,
@@ -237,7 +244,7 @@ defmodule Penelope.ML.Word2vec.Index do
   end
 
   defp get_table(%Index{tables: tables, partitions: partitions}, term) do
-    partition = rem(:xxhash.hash32(term), partitions)
+    partition = rem(:erlang.phash2(term), partitions)
     Enum.at(tables, partition)
   end
 

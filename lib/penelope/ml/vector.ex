@@ -24,7 +24,7 @@ defmodule Penelope.ML.Vector do
   @doc "retrieves a vector element by 0-based index"
   @spec get(vector::t, index::non_neg_integer) :: float
   def get(vector, index) do
-    <<value::float-native-size(32)>> = binary_part(vector, index * 4, 4)
+    <<value::float()-native()-size(32)>> = binary_part(vector, index * 4, 4)
     value
   end
 
@@ -39,7 +39,7 @@ defmodule Penelope.ML.Vector do
   @spec from_list(numbers::[float]) :: t
   def from_list(numbers) do
     numbers
-    |> Enum.map(&<<&1::float-native-size(32)>>)
+    |> Enum.map(&<<&1::float()-native()-size(32)>>)
     |> Enum.reduce(empty(), &(&2 <> &1))
   end
 

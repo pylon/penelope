@@ -22,7 +22,7 @@ extern int nif_svm_init  (ErlNifEnv* env);
 DECLARE_NIF(blas_sscal);
 DECLARE_NIF(blas_saxpy);
 DECLARE_NIF(svm_train);
-DECLARE_NIF(svm_inspect);
+DECLARE_NIF(svm_export);
 DECLARE_NIF(svm_compile);
 DECLARE_NIF(svm_predict_class);
 DECLARE_NIF(svm_predict_probability);
@@ -32,7 +32,7 @@ static ErlNifFunc nif_map[] = {
    EXPORT_NIF(blas_sscal, 2),
    EXPORT_NIF(blas_saxpy, 3),
    EXPORT_NIF(svm_train, 3, ERL_NIF_DIRTY_JOB_CPU_BOUND),
-   EXPORT_NIF(svm_inspect, 1),
+   EXPORT_NIF(svm_export, 1),
    EXPORT_NIF(svm_compile, 1),
    EXPORT_NIF(svm_predict_class, 2),
    EXPORT_NIF(svm_predict_probability, 2)

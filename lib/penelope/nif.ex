@@ -37,8 +37,8 @@ defmodule Penelope.NIF do
   end
 
   @doc "extracts svm model parameters from a model resource"
-  @spec svm_inspect(model::reference) :: map
-  def svm_inspect(_model) do
+  @spec svm_export(model::reference) :: map
+  def svm_export(_model) do
     :erlang.nif_error(:nif_library_not_loaded)
   end
 

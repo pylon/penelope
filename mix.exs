@@ -5,7 +5,7 @@ defmodule Penelope.Mixfile do
     [
       app:             :penelope,
       name:            "Penelope",
-      version:         "0.1.0",
+      version:         "0.1.1",
       elixir:          "~> 1.5",
       compilers:       ["nif" | Mix.compilers],
       aliases:         [clean: ["clean", "clean.nif"]],
@@ -38,13 +38,13 @@ defmodule Penelope.Mixfile do
 
   defp deps do
     [
-      {:credo, "~> 0.3", only: [:dev, :test]},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:xxhash, "~> 0.2.0", hex: :erlang_xxhash},
       {:e2qc, "~> 1.2"},
-      {:benchee, "~> 0.9", only: :dev},
       {:stream_data, "~> 0.3", only: [:test]},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
+      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:dogma, "~> 0.1", only: [:dev], runtime: false},
+      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:benchee, "~> 0.9", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
     ]
   end
 
