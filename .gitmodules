@@ -6,3 +6,7 @@
 	path = c_src/crfsuite
 	url = git@github.com:chokkan/crfsuite
 	branch = master
+[submodule "c_src/liblbfgs"]
+	path = c_src/liblbfgs
+	url = git@github.com:chokkan/liblbfgs
+	branch = master
