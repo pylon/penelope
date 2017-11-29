@@ -15,12 +15,8 @@
  ***************************************************************************/
 /*-------------------[       Pre Include Defines       ]-------------------*/
 /*-------------------[      Library Include Files      ]-------------------*/
-#ifdef __linux__
-#  include <libsvm/svm.h>
-#else
-#  include <svm.h>
-#endif
 /*-------------------[      Project Include Files      ]-------------------*/
+#include "deps/libsvm/svm.h"
 #include "penelope.hpp"
 /*-------------------[      Macros/Constants/Types     ]-------------------*/
 typedef struct svm_problem   SVM_PROBLEM;
