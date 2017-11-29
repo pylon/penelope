@@ -1,0 +1,8 @@
+[submodule "c_src/libsvm"]
+	path = c_src/libsvm
+	url = git@github.com:cjlin1/libsvm
+	branch = master
+[submodule "c_src/crfsuite"]
+	path = c_src/crfsuite
+	url = git@github.com:chokkan/crfsuite
+	branch = master
