@@ -899,8 +899,7 @@ void erl2crf_free_model (CRF_MODEL* model)
 ---------------------------------------------------------------------------*/
 int crf_create_file(char* path)
 {
-   strcpy(path, P_tmpdir);
-   strcat(path, "crf-XXXXXX");
+   strcpy(path, "/tmp/crf-XXXXXX");
    int fd = mkstemp(path);
    CHECK(fd != -1, "crf_create_file");
    return fd;
