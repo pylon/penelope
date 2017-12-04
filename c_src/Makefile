@@ -20,7 +20,7 @@ clean:
 
 rebuild: clean all
 
-$(OUTDIR)/penelope.so: init.cpp blas.cpp svm.cpp
+$(OUTDIR)/penelope.so: init.cpp blas.cpp svm.cpp crf.cpp
 
 %.so:
 	mkdir -p $(dir $@)

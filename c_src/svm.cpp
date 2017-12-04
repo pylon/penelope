@@ -341,7 +341,7 @@ SVM_MODEL* erl2svm_model (ErlNifEnv* env, ERL_NIF_TERM params)
       model->label = nif_alloc<int>(model->nr_class);
       for (int i = 0; i < model->nr_class; i++) {
          CHECK(enif_get_list_cell(env, tail, &value, &tail), "missing_class");
-         CHECK(enif_get_int(env, value, &model->label[i]), "invalid_class")
+         CHECK(enif_get_int(env, value, &model->label[i]), "invalid_class");
       }
       // extract support vector count
       key = enif_make_atom(env, "sv_count");
@@ -544,7 +544,7 @@ SVM_NODE** erl2svm_features (ErlNifEnv* env, ERL_NIF_TERM x, unsigned m) {
 ---------------------------------------------------------------------------*/
 SVM_NODE* erl2svm_feature (ErlNifEnv* env, ERL_NIF_TERM x) {
    ErlNifBinary vector;
-   CHECK(enif_inspect_binary(env, x, &vector), "invalid_feature")
+   CHECK(enif_inspect_binary(env, x, &vector), "invalid_feature");
    // copy the feature vector to the sparse array
    int n = vector.size / sizeof(float);
    SVM_NODE* nodes = nif_alloc<SVM_NODE>(n + 1);
