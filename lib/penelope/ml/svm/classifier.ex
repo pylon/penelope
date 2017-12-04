@@ -48,7 +48,14 @@ defmodule Penelope.ML.SVM.Classifier do
   """
   @spec export(%{svm_model: reference}) :: map
   def export(%{svm_model: svm_model}) do
-    NIF.svm_export(svm_model)
+    svm_model
+    |> NIF.svm_export()
+    |> Map.update!(:kernel, &to_string/1)
+    |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.to_list/1) end)
+    |> Map.update!(:sv, fn l -> Enum.map(l, &Vector.to_list/1) end)
+    |> Map.update!(:rho, &Vector.to_list/1)
+    |> Map.update!(:prob_a, fn v -> v && Vector.to_list(v) end)
+    |> Map.update!(:prob_b, fn v -> v && Vector.to_list(v) end)
   end
 
   @doc """
@@ -56,7 +63,15 @@ defmodule Penelope.ML.SVM.Classifier do
   """
   @spec compile(context::map, params::map) :: map
   def compile(context, params) do
-    model = NIF.svm_compile(params)
+    model =
+      params
+      |> Map.update!(:kernel, &String.to_existing_atom/1)
+      |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.from_list/1) end)
+      |> Map.update!(:sv, fn l -> Enum.map(l, &Vector.from_list/1) end)
+      |> Map.update!(:rho, &Vector.from_list/1)
+      |> Map.update!(:prob_a, fn v -> v && Vector.from_list(v) end)
+      |> Map.update!(:prob_b, fn v -> v && Vector.from_list(v) end)
+      |> NIF.svm_compile()
     Map.put(context, :svm_model, model)
   end
 
