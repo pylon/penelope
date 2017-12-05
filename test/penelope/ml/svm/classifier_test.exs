@@ -112,10 +112,36 @@ defmodule Penelope.ML.SVM.ClassifierTest do
     assert predictions === @y_train
   end
 
+  test "global parallelism" do
+    tasks = Task.async_stream(1..1000, fn _i ->
+      {context, _x, _y} = Classifier.fit(%{}, @x_train, @y_train)
+
+      params = Classifier.export(context)
+      Classifier.compile(context, params)
+
+      predictions = Enum.map(@x_train, &Classifier.predict_class(context, &1))
+      assert predictions === @y_train
+    end, ordered: false)
+
+    Stream.run(tasks)
+  end
+
+  test "shared parallelism" do
+    {context, _x, _y} = Classifier.fit(%{}, @x_train, @y_train)
+
+    tasks = Task.async_stream(1..1000, fn _i ->
+      predictions = Enum.map(@x_train, &Classifier.predict_class(context, &1))
+      assert predictions === @y_train
+    end, ordered: false)
+
+    Stream.run(tasks)
+  end
+
   @tag :stress
   test "fit stress" do
     for _ <- 1..200_000 do
       Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+      :erlang.garbage_collect()
     end
   end
 
@@ -127,6 +153,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
     for _ <- 1..2_000_000 do
       params = Classifier.export(context)
       Classifier.compile(context, params)
+      :erlang.garbage_collect()
     end
   end
 
@@ -138,6 +165,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
     for _ <- 1..10_000_000 do
       Classifier.predict_class context, hd(@x_train)
       Classifier.predict_probability context, hd(@x_train)
+      :erlang.garbage_collect()
     end
   end
 end
