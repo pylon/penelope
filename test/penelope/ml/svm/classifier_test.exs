@@ -16,14 +16,16 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   alias Penelope.ML.SVM.Classifier
 
   # embarrassingly separable training data
-  @x_train [[-1,  1],
-            [ 1,  1],
-            [ 1, -1],
-            [-1,  1],
-            [ 1,  1],
-            [ 1, -1]]
-           |> Enum.map(&Vector.from_list/1)
-  @y_train [3, 2, 1, 3, 2, 1]
+  @x_train [
+    [-1,  1],
+    [ 1,  1],
+    [ 1, -1],
+    [-1,  1],
+    [ 1,  1],
+    [ 1, -1]
+  ] |> Enum.map(&Vector.from_list/1)
+
+  @y_train ["c", "b", "a", "c", "b", "a"]
 
   test "fit/export/compile" do
     assert_raise fn ->
@@ -70,7 +72,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
         gamma:        gamma,
         coef0:        coef0,
         c:            c,
-        weights:      1..3
+        weights:      ["a", "b", "c"]
                       |> Enum.zip(weights)
                       |> Enum.into(%{}),
         epsilon:      epsilon,
@@ -122,7 +124,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
     {context, _x, _y} =
       Classifier.fit(%{}, @x_train, @y_train, probability?: true)
 
-    for _ <- 1..5_000_000 do
+    for _ <- 1..2_000_000 do
       params = Classifier.export(context)
       Classifier.compile(context, params)
     end
