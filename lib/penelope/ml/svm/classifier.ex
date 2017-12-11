@@ -23,7 +23,7 @@ defmodule Penelope.ML.SVM.Classifier do
   |`degree`      |polynomial degree                         |3        |
   |`gamma`       |training example reach - `:auto` for 1/N  |`:auto`  |
   |`coef0`       |independent term                          |0.0      |
-  |`c`           |error term penalty                        |a        |
+  |`c`           |error term penalty                        |1.0      |
   |`weights`     |class weights map - `:auto` for balanced  |`:auto`  |
   |`epsilon`     |tolerance for stopping                    |0.001    |
   |`cache_size`  |kernel cache size, in MB                  |1        |

@@ -14,10 +14,7 @@
 /*-------------------[      Project Include Files      ]-------------------*/
 /*-------------------[      Macros/Constants/Types     ]-------------------*/
 #define CHECK(result, ...)                                                 \
-   {                                                                       \
-      if (!(result))                                                       \
-         throw NifError(__VA_ARGS__);                                      \
-   }
+   ((result) ?: (throw NifError(__VA_ARGS__)))
 #define CHECKALLOC(result)                                                 \
    CHECK(result, "alloc_failed");
 /*-------------------[             Classes             ]-------------------*/
@@ -27,10 +24,12 @@
 class NifError {
 public:
    NifError () {
-      _code = "unknown";
+      strncpy(_code, "unknown", sizeof(_code) - 1);
+      _code[sizeof(_code) - 1] = 0;
    }
    NifError (const char* code) {
-      _code = code;
+      strncpy(_code, code, sizeof(_code) - 1);
+      _code[sizeof(_code) - 1] = 0;
    }
    const char* code () const {
       return _code;
@@ -45,14 +44,13 @@ public:
                      enif_make_atom(env, "nil")));
    }
 private:
-   const char* _code;
+   char _code[128 + 1];
 };
 /*-------------------[        Global Variables         ]-------------------*/
 /*-------------------[        Global Prototypes        ]-------------------*/
 template<typename T> inline T* nif_alloc (int count = 1) {
-   T* t = (T*)malloc(count * sizeof(T));
+   T* t = (T*)calloc(count, sizeof(T));
    CHECKALLOC(t);
-   memset(t, 0, count * sizeof(T));
    return t;
 }
 template<typename T> inline T* nif_clone (const T* source, int count = 1) {

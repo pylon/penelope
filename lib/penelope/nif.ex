@@ -59,4 +59,30 @@ defmodule Penelope.NIF do
   def svm_predict_probability(_model, _x) do
     :erlang.nif_error(:nif_library_not_loaded)
   end
+
+  @doc "trains a crf model using crfsuite"
+  @spec crf_train(x::[[%{String.t => float}]], y::[[String.t]], params::map)
+    :: reference
+  def crf_train(_x, _y, _params) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "extracts crf model parameters from a model resource"
+  @spec crf_export(model::reference) :: map
+  def crf_export(_model) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "compiles crf model parameters into a model resource"
+  @spec crf_compile(params::map) :: reference
+  def crf_compile(_params) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "predicts a sequence from a sequence of features"
+  @spec crf_predict(model::reference, x::[[String.t | list | map]])
+    :: {[String.t], float}
+  def crf_predict(_model, _x) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
 end

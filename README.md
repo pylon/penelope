@@ -5,21 +5,25 @@ Natural Language Processing (NLP) and Machine Learning (ML) library for Elixir.
 ## Installation
 
 ### Dependencies
-This package requires an implementation of `BLAS` for efficient matrix math
-and `libsvm` . These can be installed as follows:
+This package requires an implementation of `BLAS` for efficient matrix math.
+It can be installed on each platform as follows:
 
 #### OSX
-BLAS is built into OSX, so you only need to install libsvm.
+BLAS is built into OSX.
+```
+
+#### Alpine
+Install `openblas-dev` via apk.
 
 ```bash
-brew install libsvm
+sudo apk add openblas-dev
 ```
 
 #### Ubuntu
-Install `libblas-dev` and `libsvm` via apt.
+Install `libblas-dev` via apt.
 
 ```bash
-sudo apt install libblas-dev libsvm-dev
+sudo apt install libblas-dev
 ```
 
 ### Hex

@@ -6,7 +6,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   memory leaks in the SVM NIF.
   """
 
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   import ExUnitProperties
   import Penelope.TestUtility
