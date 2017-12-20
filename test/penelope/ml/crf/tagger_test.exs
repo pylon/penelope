@@ -160,6 +160,37 @@ defmodule Penelope.ML.CRF.TaggerTest do
     assert y_prob >= 0 and y_prob <= 1
   end
 
+  test "global parallelism" do
+    tasks = Task.async_stream(1..1000, fn _i ->
+      {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train)
+
+      params = Tagger.export(context)
+      Tagger.compile(context, params)
+
+      y_pred = Enum.map(@x_train, &Tagger.predict(context, &1))
+      for {y_train, {y_pred, y_prob}} <- Enum.zip(@y_train, y_pred) do
+        assert y_train == y_pred
+        assert y_prob >= 0 and y_prob <= 1
+      end
+    end, ordered: false)
+
+    Stream.run(tasks)
+  end
+
+  test "shared parallelism" do
+    {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train)
+
+    tasks = Task.async_stream(1..1000, fn _i ->
+      y_pred = Enum.map(@x_train, &Tagger.predict(context, &1))
+      for {y_train, {y_pred, y_prob}} <- Enum.zip(@y_train, y_pred) do
+        assert y_train == y_pred
+        assert y_prob >= 0 and y_prob <= 1
+      end
+    end, ordered: false)
+
+    Stream.run(tasks)
+  end
+
   @tag :stress
   test "fit stress" do
     for _ <- 1..30_000 do

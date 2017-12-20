@@ -24,8 +24,9 @@ defmodule Penelope.ML.Vector do
   @doc "retrieves a vector element by 0-based index"
   @spec get(vector::t, index::non_neg_integer) :: float
   def get(vector, index) do
-    <<value::float()-native()-size(32)>> = binary_part(vector, index * 4, 4)
-    value
+    vector
+    |> binary_part(index * 4, 4)
+    |> binary2float()
   end
 
   @doc "creates a vector of length n containing all zeros"
@@ -39,7 +40,7 @@ defmodule Penelope.ML.Vector do
   @spec from_list(numbers::[float]) :: t
   def from_list(numbers) do
     numbers
-    |> Enum.map(&<<&1::float()-native()-size(32)>>)
+    |> Enum.map(&float2binary/1)
     |> Enum.reduce(empty(), &(&2 <> &1))
   end
 
@@ -61,4 +62,10 @@ defmodule Penelope.ML.Vector do
   @doc "computes z = ax + y"
   @spec scale_add(y::t, a::float, x::t) :: t
   def scale_add(y, a, x), do: NIF.blas_saxpy(a / 1, x, y)
+
+  defp binary2float(<<value::float()-native()-size(32)>>), do: value
+  defp binary2float(_value), do: :NaN
+
+  defp float2binary(:NaN), do: <<0, 0, 128, 127>>
+  defp float2binary(x), do: <<x::float()-native()-size(32)>>
 end

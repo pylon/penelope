@@ -26,27 +26,26 @@ defmodule Penelope.ML.Word2vec.MeanVectorizerTest do
     {:ok, index: index}
   end
 
-  test "fit", %{index: index} do
+  test "fit", context do
     x = [["the", "quick", "brown", "fox"],
          ["the", "lazy", "dog"]]
     y = [1,
          2]
-    assert Vectorizer.fit(%{}, x, y, index: index) === {%{}, x, y}
+    assert Vectorizer.fit(context, x, y) === {context, x, y}
   end
 
-  test "transform", %{index: index} do
+  test "transform", context do
     x = [["the", "quick", "brown", "fox"],
          ["the", "lazy", "dog"],
          ["some", "old", "horse"]]
     y = [1,
          2,
          3]
-    {context, x, y} = Vectorizer.fit(%{}, x, y, index: index)
+    {context, x, y} = Vectorizer.fit(context, x, y)
 
     x_transform = [Vector.from_list([0.75, 1.5]),
                    Vector.from_list([2.0, 3.0]),
                    Vector.from_list([0.0, 1.0])]
-    assert Vectorizer.transform(%{}, x, y, index: index) ===
-           {context, x_transform, y}
+    assert Vectorizer.transform(context, x, y) === {context, x_transform, y}
   end
 end

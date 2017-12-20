@@ -55,7 +55,8 @@ defmodule Penelope.NIF do
   end
 
   @doc "predicts an ordered list of class probabilities from a feature vector"
-  @spec svm_predict_probability(model::reference, x::Vector.t) :: [float]
+  @spec svm_predict_probability(model::reference, x::Vector.t)
+    :: [{integer, float}]
   def svm_predict_probability(_model, _x) do
     :erlang.nif_error(:nif_library_not_loaded)
   end

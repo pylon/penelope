@@ -8,12 +8,12 @@ defmodule Penelope.ML.Word2vec.MeanVectorizer do
   alias Penelope.ML.Vector, as: Vector
   alias Penelope.ML.Word2vec.Index, as: Index
 
-  def fit(context, x, y, _options \\ []) do
+  def fit(context, x, y) do
     {context, x, y}
   end
 
-  def transform(context, x, y, options \\ []) do
-    index = %Index{vector_size: vector_size} = Keyword.fetch!(options, :index)
+  def transform(context, x, y) do
+    %{index: index = %Index{vector_size: vector_size}} = context
     x_vector = Enum.map(x, &vectorize(&1, index, vector_size))
     {context, x_vector, y}
   end
