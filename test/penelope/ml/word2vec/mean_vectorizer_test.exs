@@ -13,10 +13,10 @@ defmodule Penelope.ML.Word2vec.MeanVectorizerTest do
     output = "/tmp/penelope_ml_word2vec_meanvectorizertest"
 
     index = Index.create!(output, "test", vector_size: 2)
-    Index.parse_insert!(index, "the 1 1.5")
-    Index.parse_insert!(index, "fox 2 4.5")
-    Index.parse_insert!(index, "dog 5 7.5")
-    Index.parse_insert!(index, "horse 0 3")
+    Index.parse_insert!(index, {"the 1 1.5", 1})
+    Index.parse_insert!(index, {"fox 2 4.5", 2})
+    Index.parse_insert!(index, {"dog 5 7.5", 3})
+    Index.parse_insert!(index, {"horse 0 3", 4})
 
     on_exit fn ->
       Index.close(index)

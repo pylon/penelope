@@ -19,12 +19,14 @@ defmodule Penelope.ML.Word2vec.Index do
             name:        nil,
             partitions:  1,
             vector_size: 300,
+            header:      nil,
             tables:      []
 
   @type t :: %Index{version:     pos_integer,
                     name:        atom,
                     partitions:  pos_integer,
                     vector_size: pos_integer,
+                    header:      atom,
                     tables:      [atom]}
   @version 1
 
@@ -43,13 +45,13 @@ defmodule Penelope.ML.Word2vec.Index do
     partitions  = Keyword.get(options, :partitions, 1)
     vector_size = Keyword.get(options, :vector_size, 300)
     size_hint   = div(Keyword.get(options, :size_hint, 200_000), partitions)
-    header = [version:     @version,
-              name:        name,
-              partitions:  partitions,
-              vector_size: vector_size]
+    header_data = [version:     @version,
+                   name:        name,
+                   partitions:  partitions,
+                   vector_size: vector_size]
 
     File.mkdir_p!(path)
-    create_header(path, header)
+    header = create_header(path, header_data)
     tables = 0..partitions - 1
              |> Stream.map(&create_table(path, name, &1, size_hint))
              |> Enum.reduce([], &(&2 ++ [&1]))
@@ -58,6 +60,7 @@ defmodule Penelope.ML.Word2vec.Index do
            name:        name,
            partitions:  partitions,
            vector_size: vector_size,
+           header:      header,
            tables:      tables}
   end
 
@@ -71,7 +74,7 @@ defmodule Penelope.ML.Word2vec.Index do
                min_no_slots: 1]
     with {:ok, file} <- :dets.open_file(:word2vec_header, options),
          :ok         <- :dets.insert(file, {:header, header}) do
-      :dets.close file
+      file
     else
       {:error, reason} -> raise IndexError, inspect(reason)
     end
@@ -105,10 +108,15 @@ defmodule Penelope.ML.Word2vec.Index do
   """
   @spec open!(path::String.t, [cache_size: pos_integer]) :: Index.t
   def open!(path, options \\ []) do
-    [version:     version,
-     name:        name,
-     partitions:  partitions,
-     vector_size: vector_size] = open_header(path)
+    {
+      header,
+      [
+        version:     version,
+        name:        name,
+        partitions:  partitions,
+        vector_size: vector_size
+      ]
+    } = open_header(path)
     tables = 0..partitions - 1
              |> Stream.map(&open_table(path, name, &1))
              |> Enum.reduce([], &(&2 ++ [&1]))
@@ -127,6 +135,7 @@ defmodule Penelope.ML.Word2vec.Index do
            name:        name,
            partitions:  partitions,
            vector_size: vector_size,
+           header:      header,
            tables:      tables}
   end
 
@@ -139,8 +148,7 @@ defmodule Penelope.ML.Word2vec.Index do
                type:   :set]
     with {:ok, file}         <- :dets.open_file(:word2vec_header, options),
          [{:header, header}] <- :dets.lookup(file, :header) do
-      :dets.close file
-      header
+      {file, header}
     else
       {:error, reason} -> raise IndexError, inspect(reason)
     end
@@ -158,7 +166,8 @@ defmodule Penelope.ML.Word2vec.Index do
   closes the index
   """
   @spec close(index::Index.t) :: :ok
-  def close(%Index{tables: tables}) do
+  def close(%Index{header: header, tables: tables}) do
+    :dets.close(header)
     Enum.each(tables, &:dets.close/1)
   end
 
@@ -171,6 +180,7 @@ defmodule Penelope.ML.Word2vec.Index do
   def compile!(index, path) do
     path
     |> File.stream!()
+    |> Stream.with_index(_offset = 1)
     |> Task.async_stream(&parse_insert!(index, &1), ordered: false)
     |> Stream.run()
   end
@@ -178,9 +188,11 @@ defmodule Penelope.ML.Word2vec.Index do
   @doc """
   parses and inserts a single word vector text line into a word2vec index
   """
-  @spec parse_insert!(index::Index.t, line::String.t) :: {String.t, Vector.t}
-  def parse_insert!(index, line) do
-    record = parse_line!(line)
+  @spec parse_insert!(index::Index.t, {line::String.t, id::pos_integer})
+    :: {String.t, pos_integer, Vector.t}
+  def parse_insert!(index, {line, id}) do
+    {term, vector} = parse_line!(line)
+    record = {term, id, vector}
     insert!(index, record)
     record
   end
@@ -206,17 +218,39 @@ defmodule Penelope.ML.Word2vec.Index do
   @doc """
   inserts a word vector tuple into a word2vec index
   """
-  @spec insert!(index::Index.t, record::{String.t, Vector.t}) :: :ok
-  def insert!(%Index{vector_size: vector_size} = index,
-              {_term, vector} = record) do
+  @spec insert!(index::Index.t, record::{String.t, pos_integer, Vector.t})
+    :: :ok
+  def insert!(%Index{vector_size: vector_size, header: header} = index,
+              {term, id, vector} = record) do
     actual_size = div(byte_size(vector), 4)
     unless actual_size === vector_size do
       raise IndexError, "invalid vector size: #{actual_size} != #{vector_size}"
     end
-    case index
-         |> get_table(elem(record, 0))
-         |> :dets.insert(record) do
-      :ok              -> :ok
+    table = get_table(index, elem(record, 0))
+
+    with :ok <- :dets.insert(header, {id, term}),
+         :ok <- :dets.insert(table, record) do
+      :ok
+    else
+      {:error, reason} -> raise IndexError, inspect(reason)
+    end
+  end
+
+  @doc """
+  retrieves a term by its id
+
+  if found, returns the term string
+  otherwise, returns nil
+  """
+  @spec fetch!(index::Index.t, id::pos_integer) :: String.t | nil
+  def fetch!(%{name: name} = index, id) do
+    :e2qc.cache(name, id, fn -> do_fetch(index, id) end)
+  end
+
+  def do_fetch(%{header: header}, id) do
+    case :dets.lookup(header, id) do
+      [{_id, term}]    -> term
+      []               -> nil
       {:error, reason} -> raise IndexError, inspect(reason)
     end
   end
@@ -224,10 +258,10 @@ defmodule Penelope.ML.Word2vec.Index do
   @doc """
   searches for a term in the word2vec index
 
-  if found, returns the word vector (no term)
+  if found, returns the id and word vector (no term)
   otherwise, returns nil
   """
-  @spec lookup!(index::Index.t, term::String.t) :: Vector.t
+  @spec lookup!(index::Index.t, term::String.t) :: {integer, Vector.t}
   def lookup!(%{name: name} = index, term) do
     :e2qc.cache(name, term, fn -> do_lookup(index, term) end)
   end
@@ -237,9 +271,9 @@ defmodule Penelope.ML.Word2vec.Index do
     case index
          |> get_table(term)
          |> :dets.lookup(term) do
-      [{_term, vector}] -> vector
-      []                -> <<0::size(bit_size)>>
-      {:error, reason}  -> raise IndexError, inspect(reason)
+      [{_term, id, vector}] -> {id, vector}
+      []                    -> {0, <<0::size(bit_size)>>}
+      {:error, reason}      -> raise IndexError, inspect(reason)
     end
   end
 
