@@ -20,8 +20,13 @@ defmodule Penelope.ML.Word2vec.MeanVectorizer do
 
   defp vectorize(x, index, vector_size) do
     x
-    |> Stream.map(&Index.lookup!(index, &1))
+    |> Stream.map(&lookup(&1, index))
     |> Enum.reduce(Vector.zeros(vector_size), &Vector.add/2)
     |> Vector.scale(1 / Enum.count(x))
+  end
+
+  defp lookup(x, index) do
+    {_id, v} = Index.lookup!(index, x)
+    v
   end
 end
