@@ -247,7 +247,7 @@ defmodule Penelope.ML.Word2vec.Index do
     :e2qc.cache(name, id, fn -> do_fetch(index, id) end)
   end
 
-  def do_fetch(%{header: header}, id) do
+  defp do_fetch(%{header: header}, id) do
     case :dets.lookup(header, id) do
       [{_id, term}]    -> term
       []               -> nil
@@ -266,7 +266,7 @@ defmodule Penelope.ML.Word2vec.Index do
     :e2qc.cache(name, term, fn -> do_lookup(index, term) end)
   end
 
-  def do_lookup(%{vector_size: vector_size} = index, term) do
+  defp do_lookup(%{vector_size: vector_size} = index, term) do
     bit_size = vector_size * 32
     case index
          |> get_table(term)
