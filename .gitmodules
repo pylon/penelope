@@ -10,3 +10,7 @@
 	path = c_src/deps/liblbfgs
 	url = git@github.com:chokkan/liblbfgs
 	branch = master
+[submodule "c_src/deps/liblinear"]
+	path = c_src/deps/liblinear
+	url = git@github.com:cjlin1/liblinear
+	branch = master
