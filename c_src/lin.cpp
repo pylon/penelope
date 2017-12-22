@@ -312,6 +312,8 @@ void erl2lin_problem (
    ERL_NIF_TERM key;
    ERL_NIF_TERM value;
    ERL_NIF_TERM head;
+   ERL_NIF_TERM tail;
+   ErlNifBinary vector;
    // get bias value
    key = enif_make_atom(env, "bias");
    CHECK(enif_get_map_value(env, params, key, &value), "missing_bias");
@@ -319,11 +321,11 @@ void erl2lin_problem (
    // get sample matrix size
    unsigned m;
    CHECK(enif_get_list_length(env, x, &m), "invalid_x");
-   CHECK(enif_get_list_cell(env, x, &head, &x), "missing_features");
+   CHECK(enif_get_list_cell(env, x, &head, &tail), "missing_features");
    problem->l = m;
    // get feature vector size
-   unsigned n;
-   CHECK(enif_get_list_length(env, head, &n), "invalid_x");
+   CHECK(enif_inspect_binary(env, head, &vector), "invalid_features");
+   int n = vector.size / sizeof(float);
    problem->n = problem->bias < 0 ? n : n + 1;
    // copy feature/target values
    problem->x = erl2lin_features(env, x, m, problem->bias);
@@ -386,8 +388,10 @@ LINEAR_MODEL* erl2lin_model (ErlNifEnv* env, ERL_NIF_TERM params)
       for (int i = 0; i < model_count; i++) {
          for (int j = 0; j < model->nr_feature; j++)
             model->w[j * model_count + i] = ((float*)vector.data)[j];
-         CHECK(enif_get_list_cell(env, tail, &value, &tail), "missing_coef");
-         CHECK(enif_inspect_binary(env, value, &vector), "invalid_coef");
+         if (i < model_count - 1) {
+            CHECK(enif_get_list_cell(env, tail, &value, &tail), "missing_coef");
+            CHECK(enif_inspect_binary(env, value, &vector), "invalid_coef");
+         }
       }
       // extract intercepts
       if (model->bias >= 0) {
@@ -439,6 +443,12 @@ void erl2lin_params (
       params->solver_type = L1R_LR;
    else if (enif_is_identical(value, enif_make_atom(env, "l2r_lr_dual")))
       params->solver_type = L2R_LR_DUAL;
+   else if (enif_is_identical(value, enif_make_atom(env, "l2r_l2loss_svr")))
+      params->solver_type = L2R_L2LOSS_SVR;
+   else if (enif_is_identical(value, enif_make_atom(env, "l2r_l2loss_svr_dual")))
+      params->solver_type = L2R_L2LOSS_SVR_DUAL;
+   else if (enif_is_identical(value, enif_make_atom(env, "l2r_l1loss_svr_dual")))
+      params->solver_type = L2R_L1LOSS_SVR_DUAL;
    else
       throw NifError("invalid_solver");
    // decode training parameters
@@ -478,10 +488,14 @@ void erl2lin_params (
             throw;
          }
       }
-      // decode training parameters
+      // decode stopping criteria
       key = enif_make_atom(env, "epsilon");
       CHECK(enif_get_map_value(env, options, key, &value), "missing_epsilon");
       CHECK(enif_get_double(env, value, &params->eps));
+      // decode SVR sensitivity
+      key = enif_make_atom(env, "p");
+      CHECK(enif_get_map_value(env, options, key, &value), "missing_p");
+      CHECK(enif_get_double(env, value, &params->p));
    }
 }
 /*-----------< FUNCTION: erl2lin_features >----------------------------------
@@ -613,6 +627,46 @@ ERL_NIF_TERM lin2erl_model (ErlNifEnv* env, LINEAR_MODEL* model)
    key   = enif_make_atom(env, "version");
    value = enif_make_int(env, 1);
    CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
+   // encode solver type
+   key = enif_make_atom(env, "solver");
+   switch (model->param.solver_type) {
+      case L2R_LR:
+         value = enif_make_atom(env, "l2r_lr");
+         break;
+      case L2R_L2LOSS_SVC_DUAL:
+         value = enif_make_atom(env, "l2r_l2loss_svc_dual");
+         break;
+      case L2R_L2LOSS_SVC:
+         value = enif_make_atom(env, "l2r_l2loss_svc");
+         break;
+      case L2R_L1LOSS_SVC_DUAL:
+         value = enif_make_atom(env, "l2r_l1loss_svc_dual");
+         break;
+      case MCSVM_CS:
+         value = enif_make_atom(env, "mcsvm_cs");
+         break;
+      case L1R_L2LOSS_SVC:
+         value = enif_make_atom(env, "l1r_l2loss_svc");
+         break;
+      case L1R_LR:
+         value = enif_make_atom(env, "l1r_lr");
+         break;
+      case L2R_LR_DUAL:
+         value = enif_make_atom(env, "l2r_lr_dual");
+         break;
+      case L2R_L2LOSS_SVR:
+         value = enif_make_atom(env, "l2r_l2loss_svr");
+         break;
+      case L2R_L2LOSS_SVR_DUAL:
+         value = enif_make_atom(env, "l2r_l2loss_svr_dual");
+         break;
+      case L2R_L1LOSS_SVR_DUAL:
+         value = enif_make_atom(env, "l2r_l1loss_svr_dual");
+         break;
+      default:
+         value = enif_make_atom(env, "nil");
+   }
+   CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
    // encode classes
    ERL_NIF_TERM classes[model->nr_class]; memset(classes, 0, sizeof(classes));
    for (int i = 0; i < model->nr_class; i++)
@@ -659,9 +713,11 @@ LINEAR_MODEL* lin2lin_model (LINEAR_MODEL* source)
    try {
       // copy scalar fields + clear class weights (training-only)
       memcpy(&target->param, &source->param, sizeof(LINEAR_PARAM));
-      target->nr_class   = source->nr_class;
-      target->nr_feature = source->nr_feature;
-      target->bias       = source->bias;
+      target->nr_class           = source->nr_class;
+      target->nr_feature         = source->nr_feature;
+      target->bias               = source->bias;
+      target->param.weight_label = NULL;
+      target->param.weight       = NULL;
       // copy weights
       int model_count = source->nr_class == 2
          ? 1
