@@ -8,7 +8,7 @@ CFLAGS = -c -Wall -O3 -fpic \
          -Wno-sometimes-uninitialized \
          -Wno-parentheses \
          -Wno-unused-but-set-variable
-OBJDIR = ../../obj
+OBJDIR = ../../obj/crfsuite
 
 all: \
 	$(OBJDIR)/cqdb.o \

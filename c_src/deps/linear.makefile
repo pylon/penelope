@@ -1,14 +1,15 @@
 CC     = g++
 CFLAGS = -c -Wall -O3 -fpic
-OBJDIR = ../../obj/libsvm
+OBJDIR = ../../obj/liblinear
 
-all: $(OBJDIR)/svm.o
+all: $(OBJDIR)/linear.o $(OBJDIR)/tron.o
 
 clean: ; $(RM) $(OBJDIR)/*.o
 
 rebuild: clean all
 
-$(OBJDIR)/svm.o: libsvm/svm.cpp
+$(OBJDIR)/linear.o: liblinear/linear.cpp
+$(OBJDIR)/tron.o: liblinear/tron.cpp
 
 %.o:
 	mkdir -p $(dir $@)
