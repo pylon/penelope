@@ -68,21 +68,25 @@ defmodule Penelope.ML.Linear.Classifier do
   def export(%{lin_model: model, lin_classes: classes}) do
     model
     |> NIF.lin_export()
+    |> Map.update!(:solver, &to_string/1)
     |> Map.put(:classes, classes)
     |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.to_list/1) end)
     |> Map.update!(:intercept, fn
           l when is_binary(l) -> Vector.to_list(l)
           x -> x
        end)
+    |> Map.new(fn {k, v} -> {to_string(k), v} end)
   end
 
   @doc """
   compiles a pre-trained model and adds it to the pipeline context
   """
   @spec compile(context::map, params::map) :: map
-  def compile(context, %{classes: classes} = params) do
+  def compile(context, %{"classes" => classes} = params) do
     model =
       params
+      |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+      |> Map.update!(:solver, &String.to_existing_atom/1)
       |> Map.put(:classes, Enum.to_list(0..length(classes) - 1))
       |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.from_list/1) end)
       |> Map.update!(:intercept, fn

@@ -65,15 +65,17 @@ defmodule Penelope.ML.SVM.Classifier do
     |> Map.update!(:rho, &Vector.to_list/1)
     |> Map.update!(:prob_a, fn v -> v && Vector.to_list(v) end)
     |> Map.update!(:prob_b, fn v -> v && Vector.to_list(v) end)
+    |> Map.new(fn {k, v} -> {to_string(k), v} end)
   end
 
   @doc """
   compiles a pre-trained model and adds it to the pipeline context
   """
   @spec compile(context::map, params::map) :: map
-  def compile(context, %{classes: classes} = params) do
+  def compile(context, %{"classes" => classes} = params) do
     model =
       params
+      |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
       |> Map.put(:classes, Enum.to_list(0..length(classes) - 1))
       |> Map.update!(:kernel, &String.to_existing_atom/1)
       |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.from_list/1) end)
