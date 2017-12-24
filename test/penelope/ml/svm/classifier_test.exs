@@ -150,7 +150,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
     {context, _x, _y} =
       Classifier.fit(%{}, @x_train, @y_train, probability?: true)
 
-    for _ <- 1..2_000_000 do
+    for _ <- 1..1_000_000 do
       params = Classifier.export(context)
       Classifier.compile(context, params)
       :erlang.garbage_collect()
