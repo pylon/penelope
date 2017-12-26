@@ -409,7 +409,7 @@ LINEAR_MODEL* erl2lin_model (ErlNifEnv* env, ERL_NIF_TERM params)
    }
 }
 /*-----------< FUNCTION: erl2lin_params >------------------------------------
-// Purpose:    constructs a linear param structure an options map
+// Purpose:    constructs a linear param structure from an options map
 // Parameters: env      - current erlang environment
 //             options  - linear model options map
 //             params   - returns linear parameters via here
