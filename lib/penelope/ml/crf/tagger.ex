@@ -83,7 +83,10 @@ defmodule Penelope.ML.CRF.Tagger do
   """
   @spec export(%{crf_model: reference}) :: map
   def export(%{crf_model: crf_model}) do
-    NIF.crf_export(crf_model)
+    crf_model
+    |> NIF.crf_export()
+    |> Map.update!(:model, &Base.encode64/1)
+    |> Map.new(fn {k, v} -> {to_string(k), v} end)
   end
 
   @doc """
@@ -91,7 +94,12 @@ defmodule Penelope.ML.CRF.Tagger do
   """
   @spec compile(context::map, params::map) :: map
   def compile(context, params) do
-    model = NIF.crf_compile(params)
+    model =
+      params
+      |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
+      |> Map.update!(:model, &Base.decode64!/1)
+      |> NIF.crf_compile()
+
     Map.put(context, :crf_model, model)
   end
 

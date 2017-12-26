@@ -15,18 +15,27 @@ endif
 all: $(OUTDIR)/penelope.so
 
 clean:
-	$(RM) $(OBJDIR)/*.o
+	cd deps && $(MAKE) -f linear.makefile clean
+	cd deps && $(MAKE) -f svm.makefile clean
+	cd deps && $(MAKE) -f lbfgs.makefile clean
+	cd deps && $(MAKE) -f crfsuite.makefile clean
 	$(RM) $(OUTDIR)/penelope.so
 
 rebuild: clean all
 
-$(OUTDIR)/penelope.so: init.cpp blas.cpp svm.cpp crf.cpp
+$(OUTDIR)/penelope.so: init.cpp blas.cpp lin.cpp svm.cpp crf.cpp
 
 %.so:
 	mkdir -p $(dir $@)
+	cd deps && $(MAKE) -f linear.makefile
 	cd deps && $(MAKE) -f svm.makefile
 	cd deps && $(MAKE) -f lbfgs.makefile
 	cd deps && $(MAKE) -f crfsuite.makefile
-	$(CC) $(CFLAGS) -o $@ $^ $(OBJDIR)/*.o $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ \
+		$(OBJDIR)/liblinear/*.o \
+		$(OBJDIR)/libsvm/*.o \
+		$(OBJDIR)/liblbfgs/*.o \
+		$(OBJDIR)/crfsuite/*.o \
+		$(LIBS)
 
 .PHONY: all clean rebuild

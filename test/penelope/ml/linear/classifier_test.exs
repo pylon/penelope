@@ -1,9 +1,9 @@
-defmodule Penelope.ML.SVM.ClassifierTest do
+defmodule Penelope.ML.Linear.ClassifierTest do
   @moduledoc """
-  These tests verify the SVM classifier.
+  These tests verify the linear classifier.
 
   Stress tests are disabled by default, but they can be used to detect
-  memory leaks in the SVM NIF.
+  memory leaks in the linear NIF.
   """
 
   use ExUnit.Case, async: true
@@ -13,7 +13,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
 
   alias StreamData, as: Gen
   alias Penelope.ML.Vector
-  alias Penelope.ML.SVM.Classifier
+  alias Penelope.ML.Linear.Classifier
 
   # embarrassingly separable training data
   @x_train [
@@ -27,6 +27,17 @@ defmodule Penelope.ML.SVM.ClassifierTest do
 
   @y_train ["c", "b", "a", "c", "b", "a"]
 
+  @solvers [
+    :l2r_lr,
+    :l2r_l2loss_svc_dual,
+    :l2r_l2loss_svc,
+    :l2r_l1loss_svc_dual,
+    :mcsvm_cs,
+    :l1r_l2loss_svc,
+    :l1r_lr,
+    :l2r_lr_dual,
+  ]
+
   test "fit/export/compile" do
     assert_raise fn ->
       Classifier.fit %{}, [hd(@x_train)], @y_train
@@ -35,13 +46,7 @@ defmodule Penelope.ML.SVM.ClassifierTest do
       Classifier.fit %{}, @x_train, [hd(@y_train)]
     end
     assert_raise fn ->
-      Classifier.fit %{}, @x_train, @y_train, kernel: nil
-    end
-    assert_raise fn ->
-      Classifier.fit %{}, @x_train, @y_train, degree: -1
-    end
-    assert_raise fn ->
-      Classifier.fit %{}, @x_train, @y_train, gamma: -1
+      Classifier.fit %{}, @x_train, @y_train, solver: nil
     end
     assert_raise fn ->
       Classifier.fit %{}, @x_train, @y_train, c: 0
@@ -52,33 +57,20 @@ defmodule Penelope.ML.SVM.ClassifierTest do
     assert_raise fn ->
       Classifier.fit %{}, @x_train, @y_train, epsilon: -1
     end
-    assert_raise fn ->
-      Classifier.fit %{}, @x_train, @y_train, cache_size: -1
-    end
 
-    check all kernel       <- Gen.one_of([:linear, :rbf, :poly, :sigmoid]),
-              degree       <- Gen.positive_integer(),
-              gamma        <- gen_non_neg_float(),
-              coef0        <- gen_float(),
-              c            <- gen_pos_float(),
-              weights      <- Gen.list_of(gen_non_neg_float(), length: 3),
-              epsilon      <- Gen.uniform_float(),
-              cache_size   <- Gen.integer(1..16),
-              shrinking?   <- Gen.boolean(),
-              probability? <- Gen.boolean() do
+    check all solver  <- Gen.one_of(@solvers),
+              c       <- gen_pos_float(),
+              weights <- Gen.list_of(gen_non_neg_float(), length: 3),
+              epsilon <- Gen.uniform_float(),
+              bias    <- gen_float() do
       options = [
-        kernel:       kernel,
-        degree:       degree,
-        gamma:        gamma,
-        coef0:        coef0,
-        c:            c,
-        weights:      ["a", "b", "c"]
-                      |> Enum.zip(weights)
-                      |> Enum.into(%{}),
-        epsilon:      epsilon,
-        cache_size:   cache_size,
-        shrinking?:   shrinking?,
-        probability?: probability?
+        solver:  solver,
+        c:       c,
+        weights: ["a", "b", "c"]
+                 |> Enum.zip(weights)
+                 |> Enum.into(%{}),
+        epsilon: epsilon,
+        bias:    bias
       ]
       {context, _x, _y} = Classifier.fit %{}, @x_train, @y_train, options
 
@@ -98,11 +90,11 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   test "predict probability" do
     assert_raise fn ->
       {context, _x, _y} = Classifier.fit(%{}, @x_train, @y_train)
-      Classifier.predict_probability context, hd(@x_train)
+      Classifier.predict_probability(context, hd(@x_train))
     end
 
     {context, _x, _y} =
-      Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+      Classifier.fit(%{}, @x_train, @y_train, solver: :l2r_lr)
 
     predictions =
       @x_train
@@ -139,8 +131,8 @@ defmodule Penelope.ML.SVM.ClassifierTest do
 
   @tag :stress
   test "fit stress" do
-    for _ <- 1..200_000 do
-      Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+    for _ <- 1..1_000_000 do
+      Classifier.fit(%{}, @x_train, @y_train)
       :erlang.garbage_collect()
     end
   end
@@ -148,9 +140,9 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   @tag :stress
   test "export/compile stress" do
     {context, _x, _y} =
-      Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+      Classifier.fit(%{}, @x_train, @y_train)
 
-    for _ <- 1..1_000_000 do
+    for _ <- 1..2_500_000 do
       params = Classifier.export(context)
       Classifier.compile(context, params)
       :erlang.garbage_collect()
@@ -160,9 +152,9 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   @tag :stress
   test "predict stress" do
     {context, _x, _y} =
-      Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+      Classifier.fit(%{}, @x_train, @y_train, solver: :l2r_lr)
 
-    for _ <- 1..10_000_000 do
+    for _ <- 1..20_000_000 do
       Classifier.predict_class context, hd(@x_train)
       Classifier.predict_probability context, hd(@x_train)
       :erlang.garbage_collect()

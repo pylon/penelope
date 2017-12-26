@@ -10,7 +10,6 @@ It can be installed on each platform as follows:
 
 #### OSX
 BLAS is built into OSX.
-```
 
 #### Alpine
 Install `openblas-dev` via apk.

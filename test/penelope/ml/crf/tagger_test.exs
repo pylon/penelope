@@ -204,7 +204,7 @@ defmodule Penelope.ML.CRF.TaggerTest do
     {context, _x, _y} =
       Tagger.fit(%{}, @x_train, @y_train)
 
-    for _ <- 1..100_000 do
+    for _ <- 1..50_000 do
       params = Tagger.export(context)
       Tagger.compile(context, params)
       :erlang.garbage_collect()

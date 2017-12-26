@@ -30,6 +30,37 @@ defmodule Penelope.NIF do
     :erlang.nif_error(:nif_library_not_loaded)
   end
 
+  @doc "trains a inear model using liblinear"
+  @spec lin_train(x::[Vector.t], y::[integer], params::map) :: reference
+  def lin_train(_x, _y, _params) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "extracts linear model parameters from a model resource"
+  @spec lin_export(model::reference) :: map
+  def lin_export(_model) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "compiles linear model parameters into a model resource"
+  @spec lin_compile(params::map) :: reference
+  def lin_compile(_params) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "predicts a class from a feature vector"
+  @spec lin_predict_class(model::reference, x::Vector.t) :: integer
+  def lin_predict_class(_model, _x) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
+  @doc "predicts an ordered list of class probabilities from a feature vector"
+  @spec lin_predict_probability(model::reference, x::Vector.t)
+    :: [{integer, float}]
+  def lin_predict_probability(_model, _x) do
+    :erlang.nif_error(:nif_library_not_loaded)
+  end
+
   @doc "trains an svm model using libsvm"
   @spec svm_train(x::[Vector.t], y::[integer], params::map) :: reference
   def svm_train(_x, _y, _params) do

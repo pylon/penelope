@@ -1,7 +1,6 @@
 CC     = gcc
-CFLAGS = -c -Wall -O3 -fpic \
-         -Iliblbfgs/include
-OBJDIR = ../../obj
+CFLAGS = -c -Wall -O3 -fpic -Iliblbfgs/include
+OBJDIR = ../../obj/liblbfgs
 
 all: $(OBJDIR)/lbfgs.o
 
