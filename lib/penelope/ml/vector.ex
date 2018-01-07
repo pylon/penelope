@@ -51,6 +51,12 @@ defmodule Penelope.ML.Vector do
     Enum.map(0..size(vector) - 1, &get(vector, &1))
   end
 
+  @doc "concatenates two vectors"
+  @spec concat(vector::t, vector::t) :: vector::t
+  def concat(x, y) do
+    x <> y
+  end
+
   @doc "computes y = ax"
   @spec scale(x::t, a::float) :: t
   def scale(x, a), do: NIF.blas_sscal(a / 1, x)
