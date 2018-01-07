@@ -28,16 +28,16 @@ defmodule Penelope.ML.Linear.Classifier do
   |`bias`        |intercept bias (-1 for no intercept)     |1.0              |
 
   ### solver types
-  |type                  |description                      |
-  |----------------------|---------------------------------|
-  |`:l2r_lr`             |primal L2 reg logistic regression|
-  |`:l2r_l2loss_svc_dual`|dual L2 reg L2 loss SVC          |
-  |`:l2r_l2loss_svc`     |primal L2 reg L2 loss SVC        |
-  |`:l2r_l1loss_svc_dual`|dual L2 reg L1 loss SVC          |
-  |`:mcsvm_cs`           |crammer/singer SVC               |
-  |`:l1r_l2loss_svc`     |L1 reg L2 loss SVC               |
-  |`:l1r_lr`             |L1 reg logistic regression       |
-  |`:l2r_lr_dual`        |dual L2 reg logistic regression  |
+  |type                  |description                              |
+  |----------------------|-----------------------------------------|
+  |`:l2r_lr`             |primal L2 regularized logistic regression|
+  |`:l2r_l2loss_svc_dual`|dual L2 regularized L2 loss SVC          |
+  |`:l2r_l2loss_svc`     |primal L2 regularized L2 loss SVC        |
+  |`:l2r_l1loss_svc_dual`|dual L2 regularized L1 loss SVC          |
+  |`:mcsvm_cs`           |crammer/singer SVC                       |
+  |`:l1r_l2loss_svc`     |L1 regularized L2 loss SVC               |
+  |`:l1r_lr`             |L1 regularized logistic regression       |
+  |`:l2r_lr_dual`        |dual L2 regularized logistic regression  |
 
   """
   @spec fit(context::map, x::[Vector.t], y::[any], options::keyword) :: map
