@@ -7,9 +7,11 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - build-{{checksum "mix.lock"}}
       - run: git submodule sync
       - run: git submodule update --init
-
       - run: sudo apt-get install libblas-dev
       - run: mix local.hex --force
       - run: mix local.rebar --force
@@ -17,3 +19,9 @@ jobs:
       - run: mix test
       - run: mix credo --strict
       - run: mix dogma
+      - run: mix dialyzer --halt-exit-status
+      - save_cache:
+          key: build-{{checksum "mix.lock"}}
+          paths:
+            - deps
+            - _build
