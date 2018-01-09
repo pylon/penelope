@@ -59,10 +59,10 @@ defmodule Penelope.ML.Linear.ClassifierTest do
     end
 
     check all solver  <- Gen.one_of(@solvers),
-              c       <- gen_pos_float(),
-              weights <- Gen.list_of(gen_non_neg_float(), length: 3),
-              epsilon <- Gen.uniform_float(),
-              bias    <- gen_float() do
+              c       <- Gen.float(min: 1.0e-5),
+              weights <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
+              epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
+              bias    <- Gen.float(min: -1, max: 1) do
       options = [
         solver:  solver,
         c:       c,

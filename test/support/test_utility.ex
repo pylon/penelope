@@ -5,33 +5,6 @@ defmodule Penelope.TestUtility do
 
   import ExUnit.Assertions
 
-  alias StreamData, as: Gen
-
-  @doc """
-  stream generator for strictly positive random floats
-  """
-  def gen_pos_float do
-    gen_non_neg_float()
-    |> Gen.map(fn f -> f + 1.0e-6 end)
-  end
-
-  @doc """
-  stream generator for positive or 0.0 random floats
-  """
-  def gen_non_neg_float do
-    gen_float()
-    |> Gen.map(fn f -> abs(f) end)
-  end
-
-  @doc """
-  stream generator for random floats
-  """
-  def gen_float do
-    {Gen.integer(), Gen.uniform_float()}
-    |> Gen.tuple()
-    |> Gen.map(fn {i, f} -> i * f end)
-  end
-
   @doc """
   32-bit float comparison within tolerance
   """
