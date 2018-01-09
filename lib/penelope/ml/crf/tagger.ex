@@ -123,6 +123,9 @@ defmodule Penelope.ML.CRF.Tagger do
     Enum.map(x, &do_predict_sequence(model, &1))
   end
 
+  defp do_predict_sequence(_model, []) do
+    {[], 1.0}
+  end
   defp do_predict_sequence(%{crf: model}, x) do
     NIF.crf_predict(model, Enum.map(x, &featurize/1))
   end
