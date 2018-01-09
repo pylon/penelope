@@ -23,12 +23,20 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizerTest do
     text = "That costs $1.35."
     expected = ["That", "costs", "$", "1.35", "."]
     assert Tokenizer.tokenize(text) == expected
+    assert Tokenizer.detokenize(expected) == text
     text = "What're you gonna do about it?"
     expected = ["What", "'re", "you", "gon", "na", "do", "about", "it", "?"]
     assert Tokenizer.tokenize(text) == expected
+    assert Tokenizer.detokenize(expected) == text
     text = "I don't know!"
     expected = ["I", "do", "n't", "know", "!"]
     assert Tokenizer.tokenize(text) == expected
+    assert Tokenizer.detokenize(expected) == text
   end
 
+  test "detokenization special cases" do
+    tokens = ["Et", "tu", ",", "Brute", "?", "Yes", "."]
+    expected = "Et tu, Brute? Yes."
+    assert Tokenizer.detokenize(tokens) == expected
+  end
 end

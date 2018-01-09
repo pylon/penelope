@@ -5,7 +5,7 @@ defmodule Penelope.ML.Text.PTBTokenizer do
   incoming document string.
   """
 
-  alias Penelope.NLP.PennTreebankTokenizer
+  alias Penelope.NLP.Tokenize.PennTreebankTokenizer
 
   @doc """
   transforms a list of documents into a list of lists of tokens
