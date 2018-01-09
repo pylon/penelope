@@ -8,18 +8,6 @@ defmodule Penelope.TestUtility do
   alias StreamData, as: Gen
 
   @doc """
-  find the index of the largest value in a list
-  """
-  def argmax(list) do
-    list
-    |> Enum.with_index()
-    |> Enum.reduce(fn {v, i}, {v_max, i_max} ->
-          v > v_max && {v, i} || {v_max, i_max}
-        end)
-    |> elem(1)
-  end
-
-  @doc """
   stream generator for strictly positive random floats
   """
   def gen_pos_float do

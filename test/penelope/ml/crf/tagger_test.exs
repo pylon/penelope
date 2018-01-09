@@ -21,13 +21,13 @@ defmodule Penelope.ML.CRF.TaggerTest do
 
   test "fit/export/compile" do
     assert_raise fn ->
-      Classifier.fit %{}, [hd(@x_train)], @y_train
+      Tagger.fit(%{}, [hd(@x_train)], @y_train)
     end
     assert_raise fn ->
-      Classifier.fit %{}, @x_train, [hd(@y_train)]
+      Tagger.fit(%{}, @x_train, [hd(@y_train)])
     end
     assert_raise fn ->
-      Classifier.fit %{}, @x_train, @y_train, algorithm: :invalid
+      Tagger.fit(%{}, @x_train, @y_train, algorithm: :invalid)
     end
 
     algorithms = [:lbfgs, :l2sgd, :ap, :pa, :arow]
@@ -83,27 +83,20 @@ defmodule Penelope.ML.CRF.TaggerTest do
         gamma:                     gamma
       ]
 
-      {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train, options)
+      model = Tagger.fit(%{}, @x_train, @y_train, options)
 
-      for x <- @x_train do
-        {y_pred, y_prob} = Tagger.predict(context, x)
+      y = Tagger.predict_sequence(model, %{}, @x_train)
+      for {x, {y_pred, y_prob}} <- Enum.zip(@x_train, y) do
         assert length(y_pred) == length(x)
         assert y_prob >= 0 and y_prob <= 1
       end
 
-      params = Tagger.export(context)
-      assert params === context
-                        |> Tagger.compile(params)
-                        |> Tagger.export()
+      params = Tagger.export(model)
+      assert params === Tagger.export(Tagger.compile(params))
     end
   end
 
   test "featurizer" do
-    y = [
-      ["a", "b"],
-      ["x"]
-    ]
-
     # string featurizer
     x = [
       ["a", "b"],
@@ -113,9 +106,7 @@ defmodule Penelope.ML.CRF.TaggerTest do
       [%{"a" => 1.0}, %{"b" => 1.0}],
       [%{"x" => 1.0}]
     ]
-    {_context, x, y_fit} = Tagger.fit(%{}, x, y)
-    assert x === expect
-    assert y_fit === y
+    assert Tagger.transform(%{}, %{}, x) === expect
 
     # list featurizer
     x = [
@@ -126,9 +117,7 @@ defmodule Penelope.ML.CRF.TaggerTest do
       [%{"a1" => 1.0, "a2" => 1.0}, %{"b1" => 1.0}],
       [%{"x0" => 1.0}]
     ]
-    {_context, x, y_fit} = Tagger.fit(%{}, x, y)
-    assert x === expect
-    assert y_fit === y
+    assert Tagger.transform(%{}, %{}, x) === expect
 
     # map featurizer
     x = [
@@ -139,21 +128,23 @@ defmodule Penelope.ML.CRF.TaggerTest do
       [%{"a1" => 4.0, "a2-test" => 1.0}, %{"b1" => 1.0}],
       [%{"x" => 2.0}]
     ]
-    {_context, x, y_fit} = Tagger.fit(%{}, x, y)
-    assert x === expect
-    assert y_fit === y
+    assert Tagger.transform(%{}, %{}, x) === expect
   end
 
   test "predict" do
-    {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train)
+    model = Tagger.fit(%{}, @x_train, @y_train)
 
-    for {x, y} <- Enum.zip(@x_train, @y_train) do
-      {y_pred, y_prob} = Tagger.predict(context, x)
-      assert y_pred === y
+    y = Tagger.predict_sequence(model, %{}, @x_train)
+    for {{y_pred, y_prob}, y_true} <- Enum.zip(y, @y_train) do
+      assert y_pred === y_true
       assert y_prob >= 0 and y_prob <= 1
     end
 
-    {y_pred, y_prob} = Tagger.predict(context, ["some", "unseen", "input"])
+    [{y_pred, y_prob}] = Tagger.predict_sequence(
+      model,
+      %{},
+      [["some", "unseen", "input"]]
+    )
     for y <- y_pred do
       assert y in ["o", "b_num", "i_num", "b_fruit", "i_fruit"]
     end
@@ -162,14 +153,14 @@ defmodule Penelope.ML.CRF.TaggerTest do
 
   test "global parallelism" do
     tasks = Task.async_stream(1..1000, fn _i ->
-      {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train)
+      model = Tagger.fit(%{}, @x_train, @y_train)
 
-      params = Tagger.export(context)
-      Tagger.compile(context, params)
+      params = Tagger.export(model)
+      Tagger.compile(params)
 
-      y_pred = Enum.map(@x_train, &Tagger.predict(context, &1))
-      for {y_train, {y_pred, y_prob}} <- Enum.zip(@y_train, y_pred) do
-        assert y_train == y_pred
+      y = Tagger.predict_sequence(model, %{}, @x_train)
+      for {{y_pred, y_prob}, y_true} <- Enum.zip(y, @y_train) do
+        assert y_pred === y_true
         assert y_prob >= 0 and y_prob <= 1
       end
     end, ordered: false)
@@ -178,12 +169,12 @@ defmodule Penelope.ML.CRF.TaggerTest do
   end
 
   test "shared parallelism" do
-    {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train)
+    model = Tagger.fit(%{}, @x_train, @y_train)
 
     tasks = Task.async_stream(1..1000, fn _i ->
-      y_pred = Enum.map(@x_train, &Tagger.predict(context, &1))
-      for {y_train, {y_pred, y_prob}} <- Enum.zip(@y_train, y_pred) do
-        assert y_train == y_pred
+      y = Tagger.predict_sequence(model, %{}, @x_train)
+      for {{y_pred, y_prob}, y_true} <- Enum.zip(y, @y_train) do
+        assert y_pred === y_true
         assert y_prob >= 0 and y_prob <= 1
       end
     end, ordered: false)
@@ -201,22 +192,21 @@ defmodule Penelope.ML.CRF.TaggerTest do
 
   @tag :stress
   test "export/compile stress" do
-    {context, _x, _y} =
-      Tagger.fit(%{}, @x_train, @y_train)
+    model = Tagger.fit(%{}, @x_train, @y_train)
 
     for _ <- 1..50_000 do
-      params = Tagger.export(context)
-      Tagger.compile(context, params)
+      params = Tagger.export(model)
+      Tagger.compile(params)
       :erlang.garbage_collect()
     end
   end
 
   @tag :stress
   test "predict stress" do
-    {context, _x, _y} = Tagger.fit(%{}, @x_train, @y_train)
+    model = Tagger.fit(%{}, @x_train, @y_train)
 
-    for _ <- 1..4_000_000 do
-      Tagger.predict(context, hd(@x_train))
+    for _ <- 1..3_000_000 do
+      Tagger.predict_sequence(model, %{}, @x_train)
       :erlang.garbage_collect()
     end
   end

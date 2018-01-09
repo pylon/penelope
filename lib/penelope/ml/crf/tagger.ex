@@ -21,7 +21,7 @@ defmodule Penelope.ML.CRF.Tagger do
   alias Penelope.NIF
 
   @doc """
-  trains a CRF model and adds it to the pipeline context map
+  trains a CRF model and returns it as a compiled model
 
   options:
   |key                       |default             |
@@ -63,55 +63,68 @@ defmodule Penelope.ML.CRF.Tagger do
   @spec fit(
     context::map,
     x::[[String.t | list | map]],
-    y::[[String.t]], options::keyword
-  ) :: {map, [[map]], [[String.t]]}
+    y::[[String.t]],
+    options::keyword
+  ) :: map
   def fit(context, x, y, options \\ []) do
     if length(x) !== length(y), do: raise ArgumentError, "mismatched x/y"
 
-    x = Enum.map(x, fn x -> Enum.map(x, &featurize/1) end)
+    x = transform(%{}, context, x)
     params = fit_params(x, y, options)
     model = NIF.crf_train(x, y, params)
 
-    {Map.put(context, :crf_model, model), x, y}
+    %{crf: model}
+  end
+
+  @spec transform(model::map, context::map, x::[[String.t | list | map]])
+    :: [[map]]
+  def transform(_model, _context, x) do
+    Enum.map(x, fn x -> Enum.map(x, &featurize/1) end)
   end
 
   @doc """
-  extracts model parameters from the pipeline context map
+  extracts model parameters from compiled model
 
   These parameters are simple elixir objects and can later be passed to
-  `compile` to add the model back to the context.
+  `compile` to prepare the model for inference.
   """
-  @spec export(%{crf_model: reference}) :: map
-  def export(%{crf_model: crf_model}) do
-    crf_model
+  @spec export(%{crf: reference}) :: map
+  def export(%{crf: crf}) do
+    crf
     |> NIF.crf_export()
     |> Map.update!(:model, &Base.encode64/1)
     |> Map.new(fn {k, v} -> {to_string(k), v} end)
   end
 
   @doc """
-  compiles a pre-trained model and adds it to the pipeline context
+  compiles a pre-trained model
   """
-  @spec compile(context::map, params::map) :: map
-  def compile(context, params) do
+  @spec compile(params::map) :: map
+  def compile(params) do
     model =
       params
       |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
       |> Map.update!(:model, &Base.decode64!/1)
       |> NIF.crf_compile()
 
-    Map.put(context, :crf_model, model)
+    %{crf: model}
   end
 
   @doc """
-  predicts a target sequence from a feature sequence
-  returns the predicted sequence and its probability
+  predicts a list of target sequences from a list of feature sequences
+  returns the predicted sequences and their probability
   """
-  @spec predict(%{crf_model: reference}, x::[[String.t | list | map]])
-    :: {[String.t], float}
-  def predict(%{crf_model: model}, x) do
-    x = Enum.map(x, &featurize/1)
-    NIF.crf_predict(model, x)
+  @spec predict_sequence(
+    %{crf: reference},
+    context::map,
+    x::[[String.t | list | map]]
+  ) :: [{[String.t], float}]
+  def predict_sequence(model, _context, x) do
+    Enum.map(x, &do_predict_sequence(model, &1))
+  end
+
+  defp do_predict_sequence(%{crf: model}, x) do
+    NIF.crf_predict(model, Enum.map(x, &featurize/1))
   end
 
   defp fit_params(_x, _y, options) do

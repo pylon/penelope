@@ -3,20 +3,22 @@ defmodule Penelope.Mixfile do
 
   def project do
     [
-      app:             :penelope,
-      name:            "Penelope",
-      version:         "0.1.1",
-      elixir:          "~> 1.5",
-      compilers:       ["nif" | Mix.compilers],
-      aliases:         [clean: ["clean", "clean.nif"]],
-      elixirc_paths:   elixirc_paths(Mix.env),
-      start_permanent: Mix.env == :prod,
-      description:     description(),
-      deps:            deps(),
-      package:         package(),
-      dialyzer:        [ignore_warnings: ".dialyzerignore",
-                        plt_add_deps:    :transitive],
-      docs:            [extras: ["README.md"]]
+      app:               :penelope,
+      name:              "Penelope",
+      version:           "0.1.1",
+      elixir:            "~> 1.5",
+      compilers:         ["nif" | Mix.compilers],
+      aliases:           [clean: ["clean", "clean.nif"]],
+      elixirc_paths:     elixirc_paths(Mix.env),
+      start_permanent:   Mix.env == :prod,
+      description:       description(),
+      deps:              deps(),
+      package:           package(),
+      test_coverage:     [tool: ExCoveralls],
+      preferred_cli_env: [coveralls: :test, "coveralls.html": :test],
+      dialyzer:          [ignore_warnings: ".dialyzerignore",
+                          plt_add_deps:    :transitive],
+      docs:              [extras: ["README.md"]]
     ]
   end
 
@@ -29,6 +31,7 @@ defmodule Penelope.Mixfile do
 
   def application do
     [
+      mod: {Penelope.Application, []},
       extra_applications: [:logger]
     ]
   end
@@ -40,6 +43,7 @@ defmodule Penelope.Mixfile do
     [
       {:e2qc, "~> 1.2"},
       {:stream_data, "~> 0.3", only: [:test]},
+      {:excoveralls, "~> 0.8", only: :test},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
       {:dogma, "~> 0.1", only: [:dev], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},

@@ -15,7 +15,7 @@ defmodule Penelope.ML.SVM.Classifier do
   alias Penelope.NIF
 
   @doc """
-  trains an SVM model and adds it to the pipeline context map
+  trains an SVM model and returns it as a compiled model
 
   |key           |description                               |default  |
   |--------------|------------------------------------------|---------|
@@ -30,9 +30,8 @@ defmodule Penelope.ML.SVM.Classifier do
   |`shrinking?`  |use the shrinking heuristic?              |true     |
   |`probability?`|enable class probabilities?               |false    |
   """
-  @spec fit(context::map, x::[Vector.t], y::[any], options::keyword)
-    :: {map, [Vector.t], [integer]}
-  def fit(context, x, y, options \\ []) do
+  @spec fit(context::map, x::[Vector.t], y::[any], options::keyword) :: map
+  def fit(_context, x, y, options \\ []) do
     if length(x) !== length(y), do: raise ArgumentError, "mismatched x/y"
 
     classes = Enum.uniq(y)
@@ -40,22 +39,17 @@ defmodule Penelope.ML.SVM.Classifier do
 
     params = fit_params(x, y, classes, options)
     model = NIF.svm_train(x, y, params)
-    context =
-      context
-      |> Map.put(:svm_model, model)
-      |> Map.put(:svm_classes, classes)
-
-    {context, x, y}
+    %{svm: model, classes: classes}
   end
 
   @doc """
-  extracts model parameters from the pipeline context map
+  extracts model parameters from the compiled model
 
   These parameters are simple elixir objects and can later be passed to
-  `compile` to add the model back to the context.
+  `compile` to prepare the model for inference.
   """
-  @spec export(%{svm_model: reference, svm_classes: [any]}) :: map
-  def export(%{svm_model: model, svm_classes: classes}) do
+  @spec export(%{svm: reference, classes: [any]}) :: map
+  def export(%{svm: model, classes: classes}) do
     model
     |> NIF.svm_export()
     |> Map.put(:classes, classes)
@@ -69,10 +63,10 @@ defmodule Penelope.ML.SVM.Classifier do
   end
 
   @doc """
-  compiles a pre-trained model and adds it to the pipeline context
+  compiles a pre-trained model
   """
-  @spec compile(context::map, params::map) :: map
-  def compile(context, %{"classes" => classes} = params) do
+  @spec compile(params::map) :: map
+  def compile(%{"classes" => classes} = params) do
     model =
       params
       |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
@@ -85,19 +79,22 @@ defmodule Penelope.ML.SVM.Classifier do
       |> Map.update!(:prob_b, fn v -> v && Vector.from_list(v) end)
       |> NIF.svm_compile()
 
-    context
-    |> Map.put(:svm_model, model)
-    |> Map.put(:svm_classes, classes)
+    %{svm: model, classes: classes}
   end
 
   @doc """
-  predicts a target class from a feature vector
+  predicts a list of target classes from a list of feature vectors
   """
   @spec predict_class(
-    %{svm_model: reference, svm_classes: [any]},
-    x::Vector.t
-  ) :: any
-  def predict_class(%{svm_model: model, svm_classes: classes}, x) do
+    %{svm: reference, classes: [any]},
+    context::map,
+    [x::Vector.t]
+  ) :: [any]
+  def predict_class(model, _context, x) do
+    Enum.map(x, &do_predict_class(model, &1))
+  end
+
+  defp do_predict_class(%{svm: model, classes: classes}, x) do
     Enum.at(classes, NIF.svm_predict_class(model, x))
   end
 
@@ -107,10 +104,15 @@ defmodule Penelope.ML.SVM.Classifier do
   The results are returned in a map of `%{label => probability}`.
   """
   @spec predict_probability(
-    %{svm_model: reference, svm_classes: [any]},
-    x::Vector.t
-  ) :: %{any => float}
-  def predict_probability(%{svm_model: model, svm_classes: classes}, x) do
+    %{svm: reference, classes: [any]},
+    context::map,
+    [x::Vector.t]
+  ) :: [%{any => float}]
+  def predict_probability(model, _context, x) do
+    Enum.map(x, &do_predict_probability(model, &1))
+  end
+
+  defp do_predict_probability(%{svm: model, classes: classes}, x) do
     model
     |> NIF.svm_predict_probability(x)
     |> Map.new(fn {k, p} -> {Enum.at(classes, k), p} end)

@@ -16,7 +16,7 @@ defmodule Penelope.ML.Linear.Classifier do
   alias Penelope.NIF
 
   @doc """
-  trains a linear model and adds it to the pipeline context map
+  trains a linear model and returns it as a compiled model
 
   ### options:
   |key           |description                              |default          |
@@ -28,21 +28,20 @@ defmodule Penelope.ML.Linear.Classifier do
   |`bias`        |intercept bias (-1 for no intercept)     |1.0              |
 
   ### solver types
-  |type                  |description                      |
-  |----------------------|---------------------------------|
-  |`:l2r_lr`             |primal L2 reg logistic regression|
-  |`:l2r_l2loss_svc_dual`|dual L2 reg L2 loss SVC          |
-  |`:l2r_l2loss_svc`     |primal L2 reg L2 loss SVC        |
-  |`:l2r_l1loss_svc_dual`|dual L2 reg L1 loss SVC          |
-  |`:mcsvm_cs`           |crammer/singer SVC               |
-  |`:l1r_l2loss_svc`     |L1 reg L2 loss SVC               |
-  |`:l1r_lr`             |L1 reg logistic regression       |
-  |`:l2r_lr_dual`        |dual L2 reg logistic regression  |
+  |type                  |description                              |
+  |----------------------|-----------------------------------------|
+  |`:l2r_lr`             |primal L2 regularized logistic regression|
+  |`:l2r_l2loss_svc_dual`|dual L2 regularized L2 loss SVC          |
+  |`:l2r_l2loss_svc`     |primal L2 regularized L2 loss SVC        |
+  |`:l2r_l1loss_svc_dual`|dual L2 regularized L1 loss SVC          |
+  |`:mcsvm_cs`           |crammer/singer SVC                       |
+  |`:l1r_l2loss_svc`     |L1 regularized L2 loss SVC               |
+  |`:l1r_lr`             |L1 regularized logistic regression       |
+  |`:l2r_lr_dual`        |dual L2 regularized logistic regression  |
 
   """
-  @spec fit(context::map, x::[Vector.t], y::[any], options::keyword)
-    :: {map, [Vector.t], [integer]}
-  def fit(context, x, y, options \\ []) do
+  @spec fit(context::map, x::[Vector.t], y::[any], options::keyword) :: map
+  def fit(_context, x, y, options \\ []) do
     if length(x) !== length(y), do: raise ArgumentError, "mismatched x/y"
 
     classes = Enum.uniq(y)
@@ -50,22 +49,17 @@ defmodule Penelope.ML.Linear.Classifier do
 
     params = fit_params(x, y, classes, options)
     model = NIF.lin_train(x, y, params)
-    context =
-      context
-      |> Map.put(:lin_model, model)
-      |> Map.put(:lin_classes, classes)
-
-    {context, x, y}
+    %{lin: model, classes: classes}
   end
 
   @doc """
-  extracts model parameters from the pipeline context map
+  extracts model parameters from the compiled model
 
   These parameters are simple elixir objects and can later be passed to
-  `compile` to add the model back to the context.
+  `compile` to prepare the model for inference.
   """
-  @spec export(%{lin_model: reference, lin_classes: [any]}) :: map
-  def export(%{lin_model: model, lin_classes: classes}) do
+  @spec export(%{lin: reference, classes: [any]}) :: map
+  def export(%{lin: model, classes: classes}) do
     model
     |> NIF.lin_export()
     |> Map.update!(:solver, &to_string/1)
@@ -79,10 +73,10 @@ defmodule Penelope.ML.Linear.Classifier do
   end
 
   @doc """
-  compiles a pre-trained model and adds it to the pipeline context
+  compiles a pre-trained model
   """
-  @spec compile(context::map, params::map) :: map
-  def compile(context, %{"classes" => classes} = params) do
+  @spec compile(params::map) :: map
+  def compile(%{"classes" => classes} = params) do
     model =
       params
       |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
@@ -95,32 +89,40 @@ defmodule Penelope.ML.Linear.Classifier do
          end)
       |> NIF.lin_compile()
 
-    context
-    |> Map.put(:lin_model, model)
-    |> Map.put(:lin_classes, classes)
+    %{lin: model, classes: classes}
   end
 
   @doc """
-  predicts a target class from a feature vector
+  predicts a list of target classes from a list of feature vectors
   """
   @spec predict_class(
-    %{lin_model: reference, lin_classes: [any]},
-    x::Vector.t
-  ) :: any
-  def predict_class(%{lin_model: model, lin_classes: classes}, x) do
+    %{lin: reference, classes: [any]},
+    context::map,
+    [x::Vector.t]
+  ) :: [any]
+  def predict_class(model, _context, x) do
+    Enum.map(x, &do_predict_class(model, &1))
+  end
+
+  defp do_predict_class(%{lin: model, classes: classes}, x) do
     Enum.at(classes, NIF.lin_predict_class(model, x))
   end
 
   @doc """
-  predicts probabilities for all classes from a feature vector
+  predicts probabilities for all classes from a list of feature vectors
 
   The results are returned in a map of `%{label => probability}`.
   """
   @spec predict_probability(
-    %{lin_model: reference, lin_classes: [any]},
-    x::Vector.t
-  ) :: %{any => float}
-  def predict_probability(%{lin_model: model, lin_classes: classes}, x) do
+    %{lin: reference, classes: [any]},
+    context::map,
+    [x::Vector.t]
+  ) :: [%{any => float}]
+  def predict_probability(model, _context, x) do
+    Enum.map(x, &do_predict_probability(model, &1))
+  end
+
+  defp do_predict_probability(%{lin: model, classes: classes}, x) do
     model
     |> NIF.lin_predict_probability(x)
     |> Map.new(fn {k, p} -> {Enum.at(classes, k), p} end)
