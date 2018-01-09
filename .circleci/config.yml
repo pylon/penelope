@@ -17,7 +17,7 @@ jobs:
       - run: mix local.rebar --force
       - run: mix deps.get
       - run: mix test
-      - run: mix credo --strict
+      - run: mix credo --strict -i todo
       - run: mix dogma
       - run: mix dialyzer --halt-exit-status
       - save_cache:

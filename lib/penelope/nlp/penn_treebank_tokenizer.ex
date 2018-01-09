@@ -55,4 +55,8 @@ defmodule Penelope.NLP.PennTreebankTokenizer do
     String.replace(text, regex, " \\0 ")
   end
 
+  def detokenize(tokens) do
+    # todo: implement
+    Enum.join(tokens, " ")
+  end
 end
