@@ -58,11 +58,11 @@ defmodule Penelope.ML.SVM.ClassifierTest do
 
     check all kernel       <- Gen.one_of([:linear, :rbf, :poly, :sigmoid]),
               degree       <- Gen.positive_integer(),
-              gamma        <- gen_non_neg_float(),
-              coef0        <- gen_float(),
-              c            <- gen_pos_float(),
-              weights      <- Gen.list_of(gen_non_neg_float(), length: 3),
-              epsilon      <- Gen.uniform_float(),
+              gamma        <- Gen.float(min: 1.0e-5),
+              coef0        <- Gen.float(min: 1.0e-5, max: 1),
+              c            <- Gen.float(min: 1.0e-5, max: 1000),
+              weights      <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
+              epsilon      <- Gen.float(min: 1.0e-5, max: 0.5),
               cache_size   <- Gen.integer(1..16),
               shrinking?   <- Gen.boolean(),
               probability? <- Gen.boolean() do
