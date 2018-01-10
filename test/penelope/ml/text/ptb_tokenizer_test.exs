@@ -5,7 +5,8 @@ defmodule Penelope.ML.Text.PTBTokenizerTest do
 
   test "transform" do
     x = ["", "test sentence", "another test sentence"]
-    expect = [[""], ["test", "sentence"], ["another", "test", "sentence"]]
-    assert PTBTokenizer.transform(%{}, %{}, x) === expect
+    y = [[""], ["test", "sentence"], ["another", "test", "sentence"]]
+    assert PTBTokenizer.transform(%{}, %{}, x) === y
+    assert PTBTokenizer.transform(%{}, %{}, y) === x
   end
 end

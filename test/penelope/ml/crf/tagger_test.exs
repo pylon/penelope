@@ -14,9 +14,11 @@ defmodule Penelope.ML.CRF.TaggerTest do
   alias StreamData, as: Gen
   alias Penelope.ML.CRF.Tagger
 
-  @x_train [["you", "have", "four", "pears"],
+  @x_train [[],
+            ["you", "have", "four", "pears"],
             ["these", "one", "hundred", "apples"]]
-  @y_train [["o", "o", "b_num", "b_fruit"],
+  @y_train [[],
+            ["o", "o", "b_num", "b_fruit"],
             ["o", "b_num", "i_num", "b_fruit"]]
 
   test "fit/export/compile" do
