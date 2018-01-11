@@ -23,5 +23,4 @@ erl_crash.dump
 *.iml
 
 # Private files
-/priv/penelope.so
 /obj/

@@ -13,7 +13,8 @@ defmodule Penelope.NIF do
   @doc "module initialization callback"
   @spec init() :: :ok
   def init do
-    with {:error, reason} <- :erlang.load_nif('./priv/penelope', 0) do
+    path = Path.join(Application.app_dir(:penelope, "priv"), "penelope")
+    with {:error, reason} <- :erlang.load_nif(String.to_charlist(path), 0) do
       raise inspect(reason)
     end
   end
