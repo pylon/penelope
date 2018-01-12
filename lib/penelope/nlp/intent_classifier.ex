@@ -82,7 +82,7 @@ defmodule Penelope.NLP.IntentClassifier do
   @spec predict_intent(
     model::model,
     context::map,
-    x::[utterance::String.t]
+    x::String.t
   ) :: {intent::String.t, params::%{name::String.t => value::String.t}}
   def predict_intent(model, context, x) do
     # tokenize the utterance

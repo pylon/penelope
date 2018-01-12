@@ -5,7 +5,7 @@ defmodule Penelope.Mixfile do
     [
       app:               :penelope,
       name:              "Penelope",
-      version:           "0.2.4",
+      version:           "0.2.5",
       elixir:            "~> 1.5",
       compilers:         ["nif" | Mix.compilers],
       aliases:           [clean: ["clean", "clean.nif"]],
