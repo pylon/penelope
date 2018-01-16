@@ -41,9 +41,10 @@ defmodule Penelope.NLP.IntentClassifier do
   alias Penelope.ML.Pipeline
 
   @type model :: %{
-    tokenizer: [{atom, any}],
-    classifier: [{atom, any}],
-    recognizer: [{atom, any}]
+    tokenizer:   [{atom, any}],
+    detokenizer: [{atom, any}],
+    classifier:  [{atom, any}],
+    recognizer:  [{atom, any}]
   }
 
   @doc """
@@ -70,9 +71,10 @@ defmodule Penelope.NLP.IntentClassifier do
     recognizer = Pipeline.fit(context, x_token, y_entity, pipelines.recognizer)
 
     %{
-      tokenizer:  tokenizer,
-      classifier: classifier,
-      recognizer: recognizer
+      tokenizer:   tokenizer,
+      detokenizer: Enum.reverse(tokenizer),
+      classifier:  classifier,
+      recognizer:  recognizer
     }
   end
 
@@ -102,7 +104,7 @@ defmodule Penelope.NLP.IntentClassifier do
     # detokenize the parameters
     params = parse(tokens, tags)
     params = Map.new(params, fn {k, v} ->
-      [v] = Pipeline.transform(model.tokenizer, context, [v])
+      [v] = Pipeline.transform(model.detokenizer, context, [v])
       {k, v}
     end)
 
@@ -132,10 +134,12 @@ defmodule Penelope.NLP.IntentClassifier do
   """
   @spec compile(params::map) :: model
   def compile(params) do
+    tokenizer = Pipeline.compile(params["tokenizer"])
     %{
-      tokenizer:  Pipeline.compile(params["tokenizer"]),
-      classifier: Pipeline.compile(params["classifier"]),
-      recognizer: Pipeline.compile(params["recognizer"]),
+      tokenizer:   tokenizer,
+      detokenizer: Enum.reverse(tokenizer),
+      classifier:  Pipeline.compile(params["classifier"]),
+      recognizer:  Pipeline.compile(params["recognizer"]),
     }
   end
 
