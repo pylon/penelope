@@ -32,6 +32,10 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizerTest do
     expected = ["I", "do", "n't", "know", "!"]
     assert Tokenizer.tokenize(text) == expected
     assert Tokenizer.detokenize(expected) == text
+    text = "fly {pronoun} to the moon"
+    expected = ["fly", "{", "pronoun", "}", "to", "the", "moon"]
+    assert Tokenizer.tokenize(text) == expected
+    assert Tokenizer.detokenize(expected) == text
   end
 
   test "detokenization special cases" do
