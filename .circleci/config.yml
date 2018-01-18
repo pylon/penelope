@@ -16,6 +16,7 @@ jobs:
       - run: mix local.hex --force
       - run: mix local.rebar --force
       - run: mix deps.get
+      - run: mix format --check-formatted
       - run: mix test
       - run: mix credo --strict -i todo
       #- run: mix dogma
