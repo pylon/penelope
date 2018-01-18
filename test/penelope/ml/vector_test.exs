@@ -21,9 +21,11 @@ defmodule Penelope.ML.VectorTest do
     assert_raise ArgumentError, fn ->
       get(empty(), 0)
     end
+
     assert_raise ArgumentError, fn ->
       get(from_list([1]), 1)
     end
+
     assert_raise ArgumentError, fn ->
       get(from_list([1]), -1)
     end
@@ -70,9 +72,11 @@ defmodule Penelope.ML.VectorTest do
     assert_raise ArgumentError, fn ->
       add(empty(), from_list([1]))
     end
+
     assert_raise ArgumentError, fn ->
       add(from_list([1]), empty())
     end
+
     assert_raise ArgumentError, fn ->
       add(from_list([1]), from_list([1, 2]))
     end
@@ -102,16 +106,19 @@ defmodule Penelope.ML.VectorTest do
     assert_raise ArgumentError, fn ->
       scale_add(empty(), 1, from_list([1]))
     end
+
     assert_raise ArgumentError, fn ->
       scale_add(from_list([1]), 1, empty())
     end
+
     assert_raise ArgumentError, fn ->
       scale_add(from_list([1]), 1, from_list([1, 2]))
     end
 
     assert scale_add(empty(), 1, empty()) === empty()
-    assert scale_add(from_list([1, 2]), 2, from_list([3, 4]))
-           === from_list([7, 10])
+
+    assert scale_add(from_list([1, 2]), 2, from_list([3, 4])) ===
+             from_list([7, 10])
 
     check all a <- Gen.float(min: 0, max: 1),
               n <- Gen.positive_integer(),

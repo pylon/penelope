@@ -8,11 +8,13 @@ defmodule Penelope.ML.Feature.ContextFeaturizerTest do
     context = %{k1: "v1", k2: "v2"}
 
     x = [[], ["test", "sentence"], ["another"]]
+
     expect = [
       [],
       [%{k1: "v1", k2: "v2"}, %{k1: "v1", k2: "v2"}],
       [%{k1: "v1", k2: "v2"}]
     ]
+
     assert ContextFeaturizer.transform(model, context, x) == expect
   end
 end

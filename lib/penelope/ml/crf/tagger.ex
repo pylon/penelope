@@ -61,13 +61,13 @@ defmodule Penelope.ML.CRF.Tagger do
     https://sklearn-crfsuite.readthedocs.io/en/latest/api.html
   """
   @spec fit(
-    context::map,
-    x::[[String.t | list | map]],
-    y::[[String.t]],
-    options::keyword
-  ) :: map
+          context :: map,
+          x :: [[String.t() | list | map]],
+          y :: [[String.t()]],
+          options :: keyword
+        ) :: map
   def fit(context, x, y, options \\ []) do
-    if length(x) !== length(y), do: raise ArgumentError, "mismatched x/y"
+    if length(x) !== length(y), do: raise(ArgumentError, "mismatched x/y")
 
     x = transform(%{}, context, x)
     params = fit_params(x, y, options)
@@ -76,8 +76,11 @@ defmodule Penelope.ML.CRF.Tagger do
     %{crf: model}
   end
 
-  @spec transform(model::map, context::map, x::[[String.t | list | map]])
-    :: [[map]]
+  @spec transform(
+          model :: map,
+          context :: map,
+          x :: [[String.t() | list | map]]
+        ) :: [[map]]
   def transform(_model, _context, x) do
     Enum.map(x, fn x -> Enum.map(x, &featurize/1) end)
   end
@@ -99,7 +102,7 @@ defmodule Penelope.ML.CRF.Tagger do
   @doc """
   compiles a pre-trained model
   """
-  @spec compile(params::map) :: map
+  @spec compile(params :: map) :: map
   def compile(params) do
     model =
       params
@@ -115,10 +118,10 @@ defmodule Penelope.ML.CRF.Tagger do
   returns the predicted sequences and their probability
   """
   @spec predict_sequence(
-    %{crf: reference},
-    context::map,
-    x::[[String.t | list | map]]
-  ) :: [{[String.t], float}]
+          %{crf: reference},
+          context :: map,
+          x :: [[String.t() | list | map]]
+        ) :: [{[String.t()], float}]
   def predict_sequence(model, _context, x) do
     Enum.map(x, &do_predict_sequence(model, &1))
   end
@@ -126,6 +129,7 @@ defmodule Penelope.ML.CRF.Tagger do
   defp do_predict_sequence(_model, []) do
     {[], 1.0}
   end
+
   defp do_predict_sequence(%{crf: model}, x) do
     NIF.crf_predict(model, Enum.map(x, &featurize/1))
   end
@@ -134,10 +138,16 @@ defmodule Penelope.ML.CRF.Tagger do
     algorithm = Keyword.get(options, :algorithm, :lbfgs)
     min_freq = Keyword.get(options, :min_freq, 0) / 1
     all_states? = Keyword.get(options, :all_possible_states?, false)
-    all_transitions? = Keyword.get(options, :all_possible_transitions?, false)
+
+    all_transitions? =
+      Keyword.get(options, :all_possible_transitions?, false)
+
     c1 = Keyword.get(options, :c1, 0.0) / 1
     c2 = Keyword.get(options, :c2, 0.0) / 1
-    max_iter = Keyword.get(options, :max_iterations, max_iterations(algorithm))
+
+    max_iter =
+      Keyword.get(options, :max_iterations, max_iterations(algorithm))
+
     num_memories = Keyword.get(options, :num_memories, 6)
     epsilon = Keyword.get(options, :epsilon, 1.0e-5) / 1
     period = Keyword.get(options, :period, 10)
@@ -147,8 +157,13 @@ defmodule Penelope.ML.CRF.Tagger do
     calibration_eta = Keyword.get(options, :calibration_eta, 0.1) / 1
     calibration_rate = Keyword.get(options, :calibration_rate, 2.0) / 1
     calibration_samples = Keyword.get(options, :calibration_samples, 1000)
-    calibration_candidates = Keyword.get(options, :calibration_candidates, 10)
-    calibration_max_trials = Keyword.get(options, :calibration_max_trials, 20)
+
+    calibration_candidates =
+      Keyword.get(options, :calibration_candidates, 10)
+
+    calibration_max_trials =
+      Keyword.get(options, :calibration_max_trials, 20)
+
     pa_type = Keyword.get(options, :pa_type, 1)
     c = Keyword.get(options, :c, 1.0) / 1
     error_sensitive? = Keyword.get(options, :error_sensitive?, true)
@@ -157,30 +172,30 @@ defmodule Penelope.ML.CRF.Tagger do
     gamma = Keyword.get(options, :gamma, 1.0) / 1
 
     %{
-      algorithm:                 algorithm,
-      min_freq:                  min_freq,
-      all_possible_states?:      all_states?,
+      algorithm: algorithm,
+      min_freq: min_freq,
+      all_possible_states?: all_states?,
       all_possible_transitions?: all_transitions?,
-      c1:                        c1,
-      c2:                        c2,
-      max_iterations:            max_iter,
-      num_memories:              num_memories,
-      epsilon:                   epsilon,
-      period:                    period,
-      delta:                     delta,
-      linesearch:                linesearch_param(linesearch),
-      max_linesearch:            max_linesearch,
-      calibration_eta:           calibration_eta,
-      calibration_rate:          calibration_rate,
-      calibration_samples:       calibration_samples,
-      calibration_candidates:    calibration_candidates,
-      calibration_max_trials:    calibration_max_trials,
-      pa_type:                   pa_type,
-      c:                         c,
-      error_sensitive?:          error_sensitive?,
-      averaging?:                averaging?,
-      variance:                  variance,
-      gamma:                     gamma,
+      c1: c1,
+      c2: c2,
+      max_iterations: max_iter,
+      num_memories: num_memories,
+      epsilon: epsilon,
+      period: period,
+      delta: delta,
+      linesearch: linesearch_param(linesearch),
+      max_linesearch: max_linesearch,
+      calibration_eta: calibration_eta,
+      calibration_rate: calibration_rate,
+      calibration_samples: calibration_samples,
+      calibration_candidates: calibration_candidates,
+      calibration_max_trials: calibration_max_trials,
+      pa_type: pa_type,
+      c: c,
+      error_sensitive?: error_sensitive?,
+      averaging?: averaging?,
+      variance: variance,
+      gamma: gamma
     }
   end
 
@@ -188,17 +203,17 @@ defmodule Penelope.ML.CRF.Tagger do
     case algorithm do
       :lbfgs -> 2_147_483_647
       :l2sgd -> 1000
-      :ap    -> 100
-      :pa    -> 100
-      :arow  -> 100
+      :ap -> 100
+      :pa -> 100
+      :arow -> 100
     end
   end
 
   defp linesearch_param(linesearch) do
     case linesearch do
-      :more_thuente        -> :"MoreThuente"
-      :backtracking        -> :"Backtracking"
-      :strong_backtracking -> :"StrongBacktracking"
+      :more_thuente -> :MoreThuente
+      :backtracking -> :Backtracking
+      :strong_backtracking -> :StrongBacktracking
     end
   end
 
@@ -213,15 +228,19 @@ defmodule Penelope.ML.CRF.Tagger do
   defp featurize(x) when is_map(x) do
     Map.new(x, fn {k, v} -> hd(Map.to_list(featurize(k, v))) end)
   end
+
   defp featurize(x) when is_list(x) do
     Map.new(x, fn v -> hd(Map.to_list(featurize(v, 1))) end)
   end
+
   defp featurize(x) do
     featurize(x, 1)
   end
+
   defp featurize(k, v) when is_number(v) do
     %{to_string(k) => v / 1}
   end
+
   defp featurize(k, v) do
     featurize("#{k}-#{v}", 1)
   end

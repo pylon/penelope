@@ -17,13 +17,14 @@ defmodule Penelope.ML.Linear.ClassifierTest do
 
   # embarrassingly separable training data
   @x_train [
-    [-1,  1],
-    [ 1,  1],
-    [ 1, -1],
-    [-1,  1],
-    [ 1,  1],
-    [ 1, -1]
-  ] |> Enum.map(&Vector.from_list/1)
+             [-1, 1],
+             [1, 1],
+             [1, -1],
+             [-1, 1],
+             [1, 1],
+             [1, -1]
+           ]
+           |> Enum.map(&Vector.from_list/1)
 
   @y_train ["c", "b", "a", "c", "b", "a"]
 
@@ -35,43 +36,50 @@ defmodule Penelope.ML.Linear.ClassifierTest do
     :mcsvm_cs,
     :l1r_l2loss_svc,
     :l1r_lr,
-    :l2r_lr_dual,
+    :l2r_lr_dual
   ]
 
   test "fit/export/compile" do
-    assert_raise fn ->
+    assert_raise(fn ->
       Classifier.fit(%{}, [hd(@x_train)], @y_train)
-    end
-    assert_raise fn ->
-      Classifier.fit(%{}, @x_train, [hd(@y_train)])
-    end
-    assert_raise fn ->
-      Classifier.fit(%{}, @x_train, @y_train, solver: nil)
-    end
-    assert_raise fn ->
-      Classifier.fit(%{}, @x_train, @y_train, c: 0)
-    end
-    assert_raise fn ->
-      Classifier.fit(%{}, @x_train, @y_train, weights: %{1 => nil})
-    end
-    assert_raise fn ->
-      Classifier.fit(%{}, @x_train, @y_train, epsilon: -1)
-    end
+    end)
 
-    check all solver  <- Gen.one_of(@solvers),
-              c       <- Gen.float(min: 1.0e-5),
+    assert_raise(fn ->
+      Classifier.fit(%{}, @x_train, [hd(@y_train)])
+    end)
+
+    assert_raise(fn ->
+      Classifier.fit(%{}, @x_train, @y_train, solver: nil)
+    end)
+
+    assert_raise(fn ->
+      Classifier.fit(%{}, @x_train, @y_train, c: 0)
+    end)
+
+    assert_raise(fn ->
+      Classifier.fit(%{}, @x_train, @y_train, weights: %{1 => nil})
+    end)
+
+    assert_raise(fn ->
+      Classifier.fit(%{}, @x_train, @y_train, epsilon: -1)
+    end)
+
+    check all solver <- Gen.one_of(@solvers),
+              c <- Gen.float(min: 1.0e-5),
               weights <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
               epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
-              bias    <- Gen.float(min: -1, max: 1) do
+              bias <- Gen.float(min: -1, max: 1) do
       options = [
-        solver:  solver,
-        c:       c,
-        weights: ["a", "b", "c"]
-                 |> Enum.zip(weights)
-                 |> Enum.into(%{}),
+        solver: solver,
+        c: c,
+        weights:
+          ["a", "b", "c"]
+          |> Enum.zip(weights)
+          |> Enum.into(%{}),
         epsilon: epsilon,
-        bias:    bias
+        bias: bias
       ]
+
       model = Classifier.fit(%{}, @x_train, @y_train, options)
 
       params = Classifier.export(model)
@@ -86,10 +94,10 @@ defmodule Penelope.ML.Linear.ClassifierTest do
   end
 
   test "predict probability" do
-    assert_raise fn ->
+    assert_raise(fn ->
       model = Classifier.fit(%{}, @x_train, @y_train)
       Classifier.predict_probability(model, %{}, @x_train)
-    end
+    end)
 
     model = Classifier.fit(%{}, @x_train, @y_train, solver: :l2r_lr)
 
@@ -98,19 +106,25 @@ defmodule Penelope.ML.Linear.ClassifierTest do
       |> Classifier.predict_probability(%{}, @x_train)
       |> Enum.map(&Enum.max_by(&1, fn {_, v} -> v end))
       |> Enum.map(fn {k, _} -> k end)
+
     assert predictions === @y_train
   end
 
   test "global parallelism" do
-    tasks = Task.async_stream(1..1000, fn _i ->
-      model = Classifier.fit(%{}, @x_train, @y_train)
+    tasks =
+      Task.async_stream(
+        1..1000,
+        fn _i ->
+          model = Classifier.fit(%{}, @x_train, @y_train)
 
-      params = Classifier.export(model)
-      Classifier.compile(params)
+          params = Classifier.export(model)
+          Classifier.compile(params)
 
-      predictions = Classifier.predict_class(model, %{}, @x_train)
-      assert predictions === @y_train
-    end, ordered: false)
+          predictions = Classifier.predict_class(model, %{}, @x_train)
+          assert predictions === @y_train
+        end,
+        ordered: false
+      )
 
     Stream.run(tasks)
   end
@@ -118,10 +132,15 @@ defmodule Penelope.ML.Linear.ClassifierTest do
   test "shared parallelism" do
     model = Classifier.fit(%{}, @x_train, @y_train)
 
-    tasks = Task.async_stream(1..1000, fn _i ->
-      predictions = Classifier.predict_class(model, %{}, @x_train)
-      assert predictions === @y_train
-    end, ordered: false)
+    tasks =
+      Task.async_stream(
+        1..1000,
+        fn _i ->
+          predictions = Classifier.predict_class(model, %{}, @x_train)
+          assert predictions === @y_train
+        end,
+        ordered: false
+      )
 
     Stream.run(tasks)
   end

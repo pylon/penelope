@@ -8,12 +8,15 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   alias Penelope.ML.Word2vec.Index, as: Index
 
-  @switches [partitions:  :integer,
-             size_hint:   :integer,
-             vector_size: :integer]
+  @switches [
+    partitions: :integer,
+    size_hint: :integer,
+    vector_size: :integer
+  ]
 
   def run(argv) do
     {options, args, other} = OptionParser.parse(argv, switches: @switches)
+
     case {args, other} do
       {[source, target, name], []} -> execute(source, target, name, options)
       _ -> usage()
@@ -22,15 +25,16 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
   defp execute(source, target, name, options) do
     index = Index.create!(target, name, options)
+
     try do
       Index.compile!(index, source)
     after
-      Index.close index
+      Index.close(index)
     end
   end
 
   defp usage do
-    IO.puts """
+    IO.puts("""
       Word2Vec DETS Compiler
       usage: mix word2vec.compile [options] <source-file> <target-path> <name>
 
@@ -42,6 +46,6 @@ defmodule Mix.Tasks.Word2vec.Compile do
         --partitions:  number of partitions (files) to create, default: 1
         --size_hint:   index hint for the total number of words
         --vector_size: number of vectors/word, default: 300
-    """
+    """)
   end
 end

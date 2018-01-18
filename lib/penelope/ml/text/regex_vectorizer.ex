@@ -9,8 +9,11 @@ defmodule Penelope.ML.Text.RegexVectorizer do
   @doc """
   transforms a list of documents into vectors
   """
-  @spec transform(model::%{regexes: [String.t]}, context::map, x::[String.t])
-    :: [Vector.t]
+  @spec transform(
+          model :: %{regexes: [String.t()]},
+          context :: map,
+          x :: [String.t()]
+        ) :: [Vector.t()]
   def transform(model, _context, x) do
     Enum.map(x, &match_regexes(&1, model.regexes))
   end
@@ -22,6 +25,6 @@ defmodule Penelope.ML.Text.RegexVectorizer do
   end
 
   defp match_regex(x, regex) do
-    Regex.run(regex, x) && 1.0 || 0.0
+    (Regex.run(regex, x) && 1.0) || 0.0
   end
 end

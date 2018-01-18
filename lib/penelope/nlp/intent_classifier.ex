@@ -41,25 +41,25 @@ defmodule Penelope.NLP.IntentClassifier do
   alias Penelope.ML.Pipeline
 
   @type model :: %{
-    tokenizer:   [{atom, any}],
-    detokenizer: [{atom, any}],
-    classifier:  [{atom, any}],
-    recognizer:  [{atom, any}]
-  }
+          tokenizer: [{atom, any}],
+          detokenizer: [{atom, any}],
+          classifier: [{atom, any}],
+          recognizer: [{atom, any}]
+        }
 
   @doc """
   fits the tokenizer, classifier, and recognizer models
   """
   @spec fit(
-    context::map,
-    x::[utterance::String.t],
-    y::[{intent::String.t, tags::[String.t]}],
-    pipelines::[
-      tokenizer: [{String.t | atom, any}],
-      classifier: [{String.t | atom, any}],
-      recognizer: [{String.t | atom, any}]
-    ]
-  ) :: model
+          context :: map,
+          x :: [utterance :: String.t()],
+          y :: [{intent :: String.t(), tags :: [String.t()]}],
+          pipelines :: [
+            tokenizer: [{String.t() | atom, any}],
+            classifier: [{String.t() | atom, any}],
+            recognizer: [{String.t() | atom, any}]
+          ]
+        ) :: model
   def fit(context, x, y, pipelines) do
     pipelines = Map.new(pipelines)
 
@@ -67,14 +67,18 @@ defmodule Penelope.NLP.IntentClassifier do
     x_token = Pipeline.transform(tokenizer, context, x)
 
     {y_intent, y_entity} = Enum.unzip(y)
-    classifier = Pipeline.fit(context, x_token, y_intent, pipelines.classifier)
-    recognizer = Pipeline.fit(context, x_token, y_entity, pipelines.recognizer)
+
+    classifier =
+      Pipeline.fit(context, x_token, y_intent, pipelines.classifier)
+
+    recognizer =
+      Pipeline.fit(context, x_token, y_entity, pipelines.recognizer)
 
     %{
-      tokenizer:   tokenizer,
+      tokenizer: tokenizer,
       detokenizer: Enum.reverse(tokenizer),
-      classifier:  classifier,
-      recognizer:  recognizer
+      classifier: classifier,
+      recognizer: recognizer
     }
   end
 
@@ -82,10 +86,12 @@ defmodule Penelope.NLP.IntentClassifier do
   predicts an intent and its parameters from an utterance string
   """
   @spec predict_intent(
-    model::model,
-    context::map,
-    x::String.t
-  ) :: {intent::String.t, params::%{name::String.t => value::String.t}}
+          model :: model,
+          context :: map,
+          x :: String.t()
+        ) ::
+          {intent :: String.t(),
+           params :: %{(name :: String.t()) => value :: String.t()}}
   def predict_intent(model, context, x) do
     # tokenize the utterance
     [tokens] = Pipeline.transform(model.tokenizer, context, [x])
@@ -95,18 +101,18 @@ defmodule Penelope.NLP.IntentClassifier do
 
     # predict the tag sequence
     context = Map.put(context, :intent, intent)
-    [{tags, _probability}] = Pipeline.predict_sequence(
-      model.recognizer,
-      context,
-      [tokens]
-    )
+
+    [{tags, _probability}] =
+      Pipeline.predict_sequence(model.recognizer, context, [tokens])
 
     # detokenize the parameters
     params = parse(tokens, tags)
-    params = Map.new(params, fn {k, v} ->
-      [v] = Pipeline.transform(model.detokenizer, context, [v])
-      {k, v}
-    end)
+
+    params =
+      Map.new(params, fn {k, v} ->
+        [v] = Pipeline.transform(model.detokenizer, context, [v])
+        {k, v}
+      end)
 
     {intent, params}
   end
@@ -119,9 +125,11 @@ defmodule Penelope.NLP.IntentClassifier do
   defp parse([], []) do
     %{}
   end
+
   defp parse([_token | tokens], ["o" | tags]) do
     parse(tokens, tags)
   end
+
   defp parse([token | tokens], [tag | tags]) do
     <<_bi, __>> <> name = tag
 
@@ -132,26 +140,27 @@ defmodule Penelope.NLP.IntentClassifier do
   @doc """
   imports parameters from a serialized model
   """
-  @spec compile(params::map) :: model
+  @spec compile(params :: map) :: model
   def compile(params) do
     tokenizer = Pipeline.compile(params["tokenizer"])
+
     %{
-      tokenizer:   tokenizer,
+      tokenizer: tokenizer,
       detokenizer: Enum.reverse(tokenizer),
-      classifier:  Pipeline.compile(params["classifier"]),
-      recognizer:  Pipeline.compile(params["recognizer"]),
+      classifier: Pipeline.compile(params["classifier"]),
+      recognizer: Pipeline.compile(params["recognizer"])
     }
   end
 
   @doc """
   exports a runtime model to a serializable data structure
   """
-  @spec export(model::model) :: map
+  @spec export(model :: model) :: map
   def export(model) do
     %{
-      "tokenizer"  => Pipeline.export(model.tokenizer),
+      "tokenizer" => Pipeline.export(model.tokenizer),
       "classifier" => Pipeline.export(model.classifier),
-      "recognizer" => Pipeline.export(model.recognizer),
+      "recognizer" => Pipeline.export(model.recognizer)
     }
   end
 end

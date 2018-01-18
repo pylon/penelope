@@ -3,22 +3,24 @@ defmodule Penelope.Mixfile do
 
   def project do
     [
-      app:               :penelope,
-      name:              "Penelope",
-      version:           "0.3.1",
-      elixir:            "~> 1.6",
-      compilers:         ["nif" | Mix.compilers],
-      aliases:           [clean: ["clean", "clean.nif"]],
-      elixirc_paths:     elixirc_paths(Mix.env),
-      start_permanent:   Mix.env == :prod,
-      description:       description(),
-      deps:              deps(),
-      package:           package(),
-      test_coverage:     [tool: ExCoveralls],
+      app: :penelope,
+      name: "Penelope",
+      version: "0.3.1",
+      elixir: "~> 1.6",
+      compilers: ["nif" | Mix.compilers()],
+      aliases: [clean: ["clean", "clean.nif"]],
+      elixirc_paths: elixirc_paths(Mix.env()),
+      start_permanent: Mix.env() == :prod,
+      description: description(),
+      deps: deps(),
+      package: package(),
+      test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [coveralls: :test, "coveralls.html": :test],
-      dialyzer:          [ignore_warnings: ".dialyzerignore",
-                          plt_add_deps:    :transitive],
-      docs:              [extras: ["README.md"]]
+      dialyzer: [
+        ignore_warnings: ".dialyzerignore",
+        plt_add_deps: :transitive
+      ],
+      docs: [extras: ["README.md"]]
     ]
   end
 
@@ -37,7 +39,7 @@ defmodule Penelope.Mixfile do
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
     [
@@ -53,13 +55,15 @@ defmodule Penelope.Mixfile do
   end
 
   defp package do
-  [
-    files:       ["mix.exs", "README.md", "lib", "c_src", "priv/.gitignore"],
-    maintainers: ["Brent M. Spell", "Josh Ziegler"],
-    licenses:    ["Apache 2.0"],
-    links:       %{"GitHub" => "https://github.com/pylon/penelope",
-                   "Docs"   => "http://hexdocs.pm/penelope/"}
-   ]
+    [
+      files: ["mix.exs", "README.md", "lib", "c_src", "priv/.gitignore"],
+      maintainers: ["Brent M. Spell", "Josh Ziegler"],
+      licenses: ["Apache 2.0"],
+      links: %{
+        "GitHub" => "https://github.com/pylon/penelope",
+        "Docs" => "http://hexdocs.pm/penelope/"
+      }
+    ]
   end
 end
 

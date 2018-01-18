@@ -6,24 +6,28 @@ defmodule Penelope.NLP.IntentClassifierTest do
   @pipeline [
     tokenizer: [{Penelope.NLP.IntentClassifierTest.Tokenizer, []}],
     classifier: [{Penelope.NLP.IntentClassifierTest.Classifier, []}],
-    recognizer: [{Penelope.NLP.IntentClassifierTest.Recognizer, []}],
+    recognizer: [{Penelope.NLP.IntentClassifierTest.Recognizer, []}]
   ]
 
-  @x_train ["",
-            "you have four pears",
-            "these one hundred apples"]
-  @y_train [{"intent_1", []},
-            {"intent_2", ["o", "o", "b_num", "b_fruit"]},
-            {"intent_3", ["o", "b_num", "i_num", "b_fruit"]}]
-  @y_param [%{},
-            %{"num" => "four", "fruit" => "pears"},
-            %{"num" => "one hundred", "fruit" => "apples"}]
+  @x_train ["", "you have four pears", "these one hundred apples"]
+  @y_train [
+    {"intent_1", []},
+    {"intent_2", ["o", "o", "b_num", "b_fruit"]},
+    {"intent_3", ["o", "b_num", "i_num", "b_fruit"]}
+  ]
+  @y_param [
+    %{},
+    %{"num" => "four", "fruit" => "pears"},
+    %{"num" => "one hundred", "fruit" => "apples"}
+  ]
 
   test "fit/export/compile" do
     model = IntentClassifier.fit(%{}, @x_train, @y_train, @pipeline)
 
     params = IntentClassifier.export(model)
-    assert params === IntentClassifier.export(IntentClassifier.compile(params))
+
+    assert params ===
+             IntentClassifier.export(IntentClassifier.compile(params))
   end
 
   test "predict" do
@@ -34,7 +38,9 @@ defmodule Penelope.NLP.IntentClassifierTest do
 
     for {x, y, p} <- Enum.zip([@x_train, @y_train, @y_param]) do
       {y_intent, _y_tags} = y
-      assert IntentClassifier.predict_intent(model, %{}, x) === {y_intent, p}
+
+      assert IntentClassifier.predict_intent(model, %{}, x) ===
+               {y_intent, p}
     end
   end
 
@@ -46,6 +52,7 @@ defmodule Penelope.NLP.IntentClassifierTest do
     defp do_transform(x) when is_binary(x) do
       String.split(x, " ", trim: true)
     end
+
     defp do_transform(x) when is_list(x) do
       Enum.join(x, " ")
     end

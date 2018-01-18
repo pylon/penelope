@@ -9,28 +9,31 @@ defmodule Penelope.ML.PipelineTest do
   @pipeline [
     {Penelope.ML.PipelineTest.DummyStage, []},
     {Penelope.ML.PipelineTest.Transducer, [factor: 2]},
-    {Penelope.ML.PipelineTest.Predictor,  []}
+    {Penelope.ML.PipelineTest.Predictor, []}
   ]
 
   test "fit/export/compile" do
-    model = Pipeline.fit(
-      %{},
-      @x_train,
-      @y_train,
-      @pipeline
-    )
+    model =
+      Pipeline.fit(
+        %{},
+        @x_train,
+        @y_train,
+        @pipeline
+      )
 
     params = Pipeline.export(model)
     assert params === Pipeline.export(Pipeline.compile(params))
   end
 
   test "transform" do
-    model = Pipeline.fit(
-      %{},
-      @x_train,
-      @y_train,
-      @pipeline
-    )
+    model =
+      Pipeline.fit(
+        %{},
+        @x_train,
+        @y_train,
+        @pipeline
+      )
+
     expect = [6, 4, 2, 6, 4, 2]
     assert Pipeline.transform(model, %{}, @x_train) === expect
 
@@ -50,20 +53,24 @@ defmodule Penelope.ML.PipelineTest do
 
   test "predict probability" do
     model = Pipeline.fit(%{}, @x_train, @y_train, @pipeline)
+
     predictions =
       model
       |> Pipeline.predict_probability(%{}, @x_train)
       |> Enum.map(&Enum.max_by(&1, fn {_, v} -> v end))
       |> Enum.map(fn {k, _} -> k end)
+
     assert predictions === @y_train
   end
 
   test "predict sequence" do
     model = Pipeline.fit(%{}, @x_train, @y_train, @pipeline)
+
     predictions =
       model
       |> Pipeline.predict_sequence(%{}, @x_train)
       |> Enum.map(fn [y] -> y end)
+
     assert predictions === @y_train
   end
 

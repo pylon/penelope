@@ -7,7 +7,9 @@ defmodule Penelope.ML.Text.TokenFeaturizer do
   @doc """
   transforms the sequence feature list
   """
-  @spec transform(model::map, context::map, x::[[String.t]]) :: [[map]]
+  @spec transform(model :: map, context :: map, x :: [[String.t()]]) :: [
+          [map]
+        ]
   def transform(_model, _context, x) do
     Enum.map(x, &Enum.map(&1, fn x -> %{x => 1.0} end))
   end

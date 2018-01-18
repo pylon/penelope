@@ -13,12 +13,14 @@ defmodule Penelope.Application do
   """
   def start(_type, _args) do
     children = [
-      supervisor(Penelope.ML.Registry, []),
+      supervisor(Penelope.ML.Registry, [])
     ]
+
     options = [
-      name:     Penelope.Supervisor,
-      strategy: :one_for_one,
+      name: Penelope.Supervisor,
+      strategy: :one_for_one
     ]
+
     Supervisor.start_link(children, options)
   end
 end

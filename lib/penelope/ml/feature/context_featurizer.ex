@@ -18,8 +18,11 @@ defmodule Penelope.ML.Feature.ContextFeaturizer do
   @doc """
   transforms the sequence feature list
   """
-  @spec transform(model::%{keys: [String.t]}, context::map, x::[[any]])
-    :: [[map]]
+  @spec transform(
+          model :: %{keys: [String.t()]},
+          context :: map,
+          x :: [[any]]
+        ) :: [[map]]
   def transform(model, context, x) do
     features =
       model.keys

@@ -27,11 +27,11 @@ defmodule Penelope.ML.Feature.StackVectorizer do
   fits each of the configured inner vectorizers
   """
   @spec fit(
-    context::map,
-    x::[any],
-    y::[any],
-    features::[{String.t | atom, any}]
-  ) :: [{atom, any}]
+          context :: map,
+          x :: [any],
+          y :: [any],
+          features :: [{String.t() | atom, any}]
+        ) :: [{atom, any}]
   def fit(context, x, y, features) do
     Enum.map(features, &do_fit(&1, context, x, y))
   end
@@ -41,12 +41,10 @@ defmodule Penelope.ML.Feature.StackVectorizer do
 
     # fit this feature, if supported
     # otherwise, compile to an atom-keyed map
-    model = Pipeline.call_maybe(
-      module,
-      :fit,
-      [context, x, y, options],
-      fn -> Map.new(options) end
-    )
+    model =
+      Pipeline.call_maybe(module, :fit, [context, x, y, options], fn ->
+        Map.new(options)
+      end)
 
     {module, model}
   end
@@ -55,8 +53,9 @@ defmodule Penelope.ML.Feature.StackVectorizer do
   transform a list of feature vectors using the inner featurizers and
   stack the results into a single vector per sample
   """
-  @spec transform(model::[{atom, any}], context::map, x::[any])
-    :: [Vector.t]
+  @spec transform(model :: [{atom, any}], context :: map, x :: [any]) :: [
+          Vector.t()
+        ]
   def transform(model, context, x) do
     Enum.reduce(
       model,
@@ -67,12 +66,10 @@ defmodule Penelope.ML.Feature.StackVectorizer do
 
   defp do_transform({module, model}, context, r_x, x) do
     # call the inner vectorizer
-    x = Pipeline.call_maybe(
-      module,
-      :transform,
-      [model, context, x],
-      fn -> nil end
-    )
+    x =
+      Pipeline.call_maybe(module, :transform, [model, context, x], fn ->
+        nil
+      end)
 
     # if results were produced, stack them into the existing vectors
     if x do
@@ -85,7 +82,7 @@ defmodule Penelope.ML.Feature.StackVectorizer do
   @doc """
   imports parameters from a serialized model
   """
-  @spec compile(params::[map]) :: [{atom, any}]
+  @spec compile(params :: [map]) :: [{atom, any}]
   def compile(params) do
     Pipeline.compile(params)
   end
@@ -93,7 +90,7 @@ defmodule Penelope.ML.Feature.StackVectorizer do
   @doc """
   exports a runtime model to a serializable data structure
   """
-  @spec export(model::[{atom, any}]) :: [map]
+  @spec export(model :: [{atom, any}]) :: [map]
   def export(model) do
     Pipeline.export(model)
   end

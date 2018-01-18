@@ -18,22 +18,27 @@ defmodule Penelope.ML.Word2vec.MeanVectorizerTest do
     Index.parse_insert!(index, {"dog 5 7.5", 3})
     Index.parse_insert!(index, {"horse 0 3", 4})
 
-    on_exit fn ->
+    on_exit(fn ->
       Index.close(index)
       File.rm_rf(output)
-    end
+    end)
 
     {:ok, word2vec_index: index}
   end
 
   test "transform", context do
-    x = [["the", "quick", "brown", "fox"],
-         ["the", "lazy", "dog"],
-         ["some", "old", "horse"]]
+    x = [
+      ["the", "quick", "brown", "fox"],
+      ["the", "lazy", "dog"],
+      ["some", "old", "horse"]
+    ]
 
-    expect = [Vector.from_list([0.75, 1.5]),
-              Vector.from_list([2.0, 3.0]),
-              Vector.from_list([0.0, 1.0])]
+    expect = [
+      Vector.from_list([0.75, 1.5]),
+      Vector.from_list([2.0, 3.0]),
+      Vector.from_list([0.0, 1.0])
+    ]
+
     assert Vectorizer.transform(%{}, context, x) === expect
   end
 end

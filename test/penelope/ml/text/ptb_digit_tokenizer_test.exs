@@ -8,14 +8,16 @@ defmodule Penelope.ML.Text.PTBDigitTokenizerTest do
       "",
       "test sentence",
       "another test sentence",
-      "pi is 3.14159.",
+      "pi is 3.14159."
     ]
+
     y = [
       [""],
       ["test", "sentence"],
       ["another", "test", "sentence"],
-      ["pi", "is", "3", ".", "1", "4", "1", "5", "9", "."],
+      ["pi", "is", "3", ".", "1", "4", "1", "5", "9", "."]
     ]
+
     assert PTBDigitTokenizer.transform(%{}, %{}, x) === y
     assert PTBDigitTokenizer.transform(%{}, %{}, y) === x
   end

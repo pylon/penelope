@@ -10,11 +10,13 @@ defmodule Penelope.ML.Text.CountVectorizerTest do
       ["test", "sentence"],
       ["another", "test", "sentence"]
     ]
+
     expect = [
       Vector.zeros(1),
       Vector.from_list([2]),
       Vector.from_list([3])
     ]
+
     assert CountVectorizer.transform(%{}, %{}, x) === expect
   end
 end

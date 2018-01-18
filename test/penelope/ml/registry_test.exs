@@ -32,15 +32,16 @@ defmodule Penelope.ML.RegistryTest do
   end
 
   test "module fallback" do
-    assert_raise fn ->
+    assert_raise(fn ->
       Registry.lookup(Invalid.Module)
-    end
+    end)
 
-    assert (Registry.lookup("Elixir.Penelope.ML.RegistryTest.TestModule3")
-            === TestModule3)
-    assert (Registry.lookup(TestModule3)
-            === TestModule3)
-    assert (Registry.invert(TestModule3)
-            === "Elixir.Penelope.ML.RegistryTest.TestModule3")
+    assert Registry.lookup("Elixir.Penelope.ML.RegistryTest.TestModule3") ===
+             TestModule3
+
+    assert Registry.lookup(TestModule3) === TestModule3
+
+    assert Registry.invert(TestModule3) ===
+             "Elixir.Penelope.ML.RegistryTest.TestModule3"
   end
 end

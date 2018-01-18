@@ -25,7 +25,10 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizer do
     |> String.replace(~r/([ \([{<])"/, "\\1 `` ")
     |> String.replace(~r/\.\.\.|\x{2026}/u, " ... ")
     |> space_pad(~r/[,;:@#$%&]/)
-    |> String.replace(~r/([^.])(\.)([\]\)}>"'\x{2019}]*)[\s]*$/u, "\\1 \\2\\3 ")
+    |> String.replace(
+      ~r/([^.])(\.)([\]\)}>"'\x{2019}]*)[\s]*$/u,
+      "\\1 \\2\\3 "
+    )
     |> space_pad(~r/[\]\[\(\)\{\}<>?!\x{2013}\x{2014}\x{2e3a}\x{2e3b}]|--/u)
     |> String.replace(~r/^/, " ")
     |> String.replace(~r/$/, " ")
@@ -34,8 +37,8 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizer do
   end
 
   defp contractions(text) do
-    text
     # we might not want to do the 's segmentation here
+    text
     |> String.replace(~r/['`\x{2019}](s|m|d|ll|re|ve) /iu, " '\\1 ")
     |> String.replace(~r/n['`\x{2019}]t /iu, " n't ")
     |> String.replace(~r/(c)annot/i, "\\1an not")
@@ -69,23 +72,26 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizer do
   end
 
   defp repunctuate(text) do
-    text
-    |> String.replace(~r/^``/, ~S("))
-    |> String.replace(~r/([ \([{<])``/, ~S(\\1"))
-    |> String.replace(~r/ \.\.\.\s*/, "...")
-    |> String.replace(~r/\s([,;:@%])/, "\\1")
-    |> String.replace(~r/([@#$])\s/, "\\1")
-    |> String.replace(~r/([^.])\s(\.)([\]\)}>"'\x{2019}]*)\s*$/u, "\\1\\2\\3")
-    |> String.replace(~r/\s([\]\)\}>?!\x{2014}\x{2e3b}]|--)/u, "\\1")
-    |> String.replace(~r/([\[\(\{<\x{2013}\x{2e3a}]|--)\s/u, "\\1")
-    |> String.replace(~r/\s''/, ~S("))
-    |> String.replace(~r/([^'])['\x{2019}]/u, "\\1'")
     # best effort at replacing spaces after full stops
     # ideally, this wouldn't be necessary, as inputs to
     # the tokenizer should generally be single sentences,
     # but they're not guaranteed to be
     # - a non-period followed by a period, followed by anything
     #   other than a single letter (except I or A) + word boundary
+    text
+    |> String.replace(~r/^``/, ~S("))
+    |> String.replace(~r/([ \([{<])``/, ~S(\\1"))
+    |> String.replace(~r/ \.\.\.\s*/, "...")
+    |> String.replace(~r/\s([,;:@%])/, "\\1")
+    |> String.replace(~r/([@#$])\s/, "\\1")
+    |> String.replace(
+      ~r/([^.])\s(\.)([\]\)}>"'\x{2019}]*)\s*$/u,
+      "\\1\\2\\3"
+    )
+    |> String.replace(~r/\s([\]\)\}>?!\x{2014}\x{2e3b}]|--)/u, "\\1")
+    |> String.replace(~r/([\[\(\{<\x{2013}\x{2e3a}]|--)\s/u, "\\1")
+    |> String.replace(~r/\s''/, ~S("))
+    |> String.replace(~r/([^'])['\x{2019}]/u, "\\1'")
     |> String.replace(~r/([^.])\.(?![^\dai]\b)/, "\\1. ")
     |> String.replace(~r/\. (\d|$)/, ".\\1")
     |> String.replace(~r/([?!])(?=\w)/, "\\1 ")

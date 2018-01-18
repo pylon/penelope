@@ -11,7 +11,9 @@ defmodule Penelope.ML.Text.CountVectorizer do
   @doc """
   transforms a list of samples (list of lists of tokens) into vectors
   """
-  @spec transform(model::map, context::map, x::[[String.t]]) :: [Vector.t]
+  @spec transform(model :: map, context :: map, x :: [[String.t()]]) :: [
+          Vector.t()
+        ]
   def transform(_model, _context, x) do
     Enum.map(x, fn x -> Vector.from_list([Enum.count(x) / 1]) end)
   end

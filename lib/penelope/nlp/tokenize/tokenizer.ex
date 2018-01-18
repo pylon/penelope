@@ -6,7 +6,7 @@ defmodule Penelope.NLP.Tokenize.Tokenizer do
   @doc """
   Separate a string into a list of tokens.
   """
-  @callback tokenize(String.t) :: [String.t]
+  @callback tokenize(String.t()) :: [String.t()]
 
   @doc """
   Reverse the tokenization process, turning a list of
@@ -15,6 +15,5 @@ defmodule Penelope.NLP.Tokenize.Tokenizer do
   to return a string identical to the original tokenizer's
   input.
   """
-  @callback detokenize([String.t]) :: String.t
-
+  @callback detokenize([String.t()]) :: String.t()
 end

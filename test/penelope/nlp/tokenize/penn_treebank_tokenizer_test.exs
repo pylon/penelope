@@ -6,6 +6,7 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizerTest do
 
   test "some sample tokenizations" do
     text = ~s(The quick, brown dog jumped over the "fence")
+
     expected = [
       "The",
       "quick",
@@ -19,6 +20,7 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizerTest do
       "fence",
       "''"
     ]
+
     assert Tokenizer.tokenize(text) == expected
     text = "That costs $1.35."
     expected = ["That", "costs", "$", "1.35", "."]

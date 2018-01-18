@@ -30,9 +30,14 @@ defmodule Penelope.ML.SVM.Classifier do
   |`shrinking?`  |use the shrinking heuristic?              |true     |
   |`probability?`|enable class probabilities?               |false    |
   """
-  @spec fit(context::map, x::[Vector.t], y::[any], options::keyword) :: map
+  @spec fit(
+          context :: map,
+          x :: [Vector.t()],
+          y :: [any],
+          options :: keyword
+        ) :: map
   def fit(_context, x, y, options \\ []) do
-    if length(x) !== length(y), do: raise ArgumentError, "mismatched x/y"
+    if length(x) !== length(y), do: raise(ArgumentError, "mismatched x/y")
 
     classes = Enum.uniq(y)
     y = Enum.map(y, &index_of(classes, &1))
@@ -65,12 +70,12 @@ defmodule Penelope.ML.SVM.Classifier do
   @doc """
   compiles a pre-trained model
   """
-  @spec compile(params::map) :: map
+  @spec compile(params :: map) :: map
   def compile(%{"classes" => classes} = params) do
     model =
       params
       |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
-      |> Map.put(:classes, Enum.to_list(0..length(classes) - 1))
+      |> Map.put(:classes, Enum.to_list(0..(length(classes) - 1)))
       |> Map.update!(:kernel, &String.to_existing_atom/1)
       |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.from_list/1) end)
       |> Map.update!(:sv, fn l -> Enum.map(l, &Vector.from_list/1) end)
@@ -85,11 +90,9 @@ defmodule Penelope.ML.SVM.Classifier do
   @doc """
   predicts a list of target classes from a list of feature vectors
   """
-  @spec predict_class(
-    %{svm: reference, classes: [any]},
-    context::map,
-    [x::Vector.t]
-  ) :: [any]
+  @spec predict_class(%{svm: reference, classes: [any]}, context :: map, [
+          x :: Vector.t()
+        ]) :: [any]
   def predict_class(model, _context, x) do
     Enum.map(x, &do_predict_class(model, &1))
   end
@@ -104,10 +107,10 @@ defmodule Penelope.ML.SVM.Classifier do
   The results are returned in a map of `%{label => probability}`.
   """
   @spec predict_probability(
-    %{svm: reference, classes: [any]},
-    context::map,
-    [x::Vector.t]
-  ) :: [%{any => float}]
+          %{svm: reference, classes: [any]},
+          context :: map,
+          [x :: Vector.t()]
+        ) :: [%{any => float}]
   def predict_probability(model, _context, x) do
     Enum.map(x, &do_predict_probability(model, &1))
   end
@@ -119,25 +122,27 @@ defmodule Penelope.ML.SVM.Classifier do
   end
 
   defp fit_params(x, y, classes, options) do
-    gamma = with :auto <- Keyword.get(options, :gamma, :auto) do
-      auto_gamma(x)
-    end
+    gamma =
+      with :auto <- Keyword.get(options, :gamma, :auto) do
+        auto_gamma(x)
+      end
 
-    weights = case Keyword.get(options, :weights, :auto) do
-      :auto   -> auto_weights(y)
-      weights -> manual_weights(classes, weights)
-    end
+    weights =
+      case Keyword.get(options, :weights, :auto) do
+        :auto -> auto_weights(y)
+        weights -> manual_weights(classes, weights)
+      end
 
     %{
-      kernel:       Keyword.get(options, :kernel, :linear),
-      degree:       Keyword.get(options, :degree, 3),
-      gamma:        gamma / 1,
-      coef0:        Keyword.get(options, :coef0, 0) / 1,
-      c:            Keyword.get(options, :c, 1) / 1,
-      weights:      weights,
-      epsilon:      Keyword.get(options, :epsilon, 1.0e-3) / 1,
-      cache_size:   Keyword.get(options, :cache_size, 1) / 1,
-      shrinking?:   Keyword.get(options, :shrinking?, true),
+      kernel: Keyword.get(options, :kernel, :linear),
+      degree: Keyword.get(options, :degree, 3),
+      gamma: gamma / 1,
+      coef0: Keyword.get(options, :coef0, 0) / 1,
+      c: Keyword.get(options, :c, 1) / 1,
+      weights: weights,
+      epsilon: Keyword.get(options, :epsilon, 1.0e-3) / 1,
+      cache_size: Keyword.get(options, :cache_size, 1) / 1,
+      shrinking?: Keyword.get(options, :shrinking?, true),
       probability?: Keyword.get(options, :probability?, false)
     }
   end
