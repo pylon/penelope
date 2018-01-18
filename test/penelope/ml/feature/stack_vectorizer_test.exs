@@ -9,37 +9,43 @@ defmodule Penelope.ML.Feature.StackVectorizerTest do
 
   @stack [
     {Penelope.ML.Feature.StackVectorizerTest.DummyFeature, []},
-    {Penelope.ML.Feature.StackVectorizerTest.Transducer1,  [factor: 2]},
-    {Penelope.ML.Feature.StackVectorizerTest.Transducer2,  []}
+    {Penelope.ML.Feature.StackVectorizerTest.Transducer1, [factor: 2]},
+    {Penelope.ML.Feature.StackVectorizerTest.Transducer2, []}
   ]
 
   test "fit/export/compile" do
-    model = StackVectorizer.fit(
-      %{},
-      @x_train,
-      @y_train,
-      @stack
-    )
+    model =
+      StackVectorizer.fit(
+        %{},
+        @x_train,
+        @y_train,
+        @stack
+      )
 
     params = StackVectorizer.export(model)
-    assert params === StackVectorizer.export(StackVectorizer.compile(params))
+
+    assert params ===
+             StackVectorizer.export(StackVectorizer.compile(params))
   end
 
   test "transform" do
-    model = StackVectorizer.fit(
-      %{},
-      @x_train,
-      @y_train,
-      @stack
-    )
+    model =
+      StackVectorizer.fit(
+        %{},
+        @x_train,
+        @y_train,
+        @stack
+      )
+
     expect = [
       [6, 3 / 12],
       [4, 2 / 12],
       [2, 1 / 12],
       [6, 3 / 12],
       [4, 2 / 12],
-      [2, 1 / 12],
+      [2, 1 / 12]
     ]
+
     x = StackVectorizer.transform(model, %{}, @x_train)
     assert x === Enum.map(expect, &Vector.from_list/1)
 
@@ -64,6 +70,7 @@ defmodule Penelope.ML.Feature.StackVectorizerTest do
         |> Enum.map(&Vector.to_list/1)
         |> Enum.map(&Enum.sum/1)
         |> Enum.sum()
+
       %{factor: 1.0 / sum}
     end
 

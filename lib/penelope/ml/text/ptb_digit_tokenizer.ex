@@ -11,7 +11,9 @@ defmodule Penelope.ML.Text.PTBDigitTokenizer do
   transforms a list of documents into a list of token lists
   transforms a list of token lists into a list of documents
   """
-  @spec transform(model::map, context::map, x::[String.t]) :: [[String.t]]
+  @spec transform(model :: map, context :: map, x :: [String.t()]) :: [
+          [String.t()]
+        ]
   def transform(_model, _context, x) do
     Enum.map(x, &do_transform/1)
   end
@@ -22,6 +24,7 @@ defmodule Penelope.ML.Text.PTBDigitTokenizer do
     |> String.replace(~r/([\.])([\d])/, "\\1 \\2")
     |> PennTreebankTokenizer.tokenize()
   end
+
   defp do_transform(x) when is_list(x) do
     x
     |> PennTreebankTokenizer.detokenize()

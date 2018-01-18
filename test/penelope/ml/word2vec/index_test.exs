@@ -10,22 +10,27 @@ defmodule Penelope.ML.Word2vec.IndexTest do
   alias Penelope.ML.Word2vec.IndexError, as: IndexError
 
   setup_all do
-    input  = "/tmp/penelope_ml_word2vec_index.txt"
+    input = "/tmp/penelope_ml_word2vec_index.txt"
     output = "/tmp/penelope_ml_word2vec_index"
 
     File.write!(
       input,
       1..10
-      |> Enum.map(fn i -> "a" <> Integer.to_string(i) <> " " <>
-                          (1..10
-                           |> Enum.map(fn j -> Float.to_string(i / j) end)
-                           |> Enum.join(" ")) end)
-      |> Enum.join("\n"))
+      |> Enum.map(fn i ->
+        "a" <>
+          Integer.to_string(i) <>
+          " " <>
+          (1..10
+           |> Enum.map(fn j -> Float.to_string(i / j) end)
+           |> Enum.join(" "))
+      end)
+      |> Enum.join("\n")
+    )
 
-    on_exit fn ->
+    on_exit(fn ->
       File.rm(input)
       File.rm_rf(output)
-    end
+    end)
 
     {:ok, input: input, output: output}
   end
@@ -46,6 +51,7 @@ defmodule Penelope.ML.Word2vec.IndexTest do
       {term, vector} = Index.parse_line!("invalid 1")
       Index.insert!(index, {term, 1, vector})
     end
+
     assert_raise IndexError, fn ->
       Index.parse_insert!(index, {"invalid 1", 1})
     end
@@ -70,13 +76,16 @@ defmodule Penelope.ML.Word2vec.IndexTest do
 
     1..10
     |> Enum.each(fn i ->
-        word   = "a" <> Integer.to_string(i)
-        vector = 1..10
-                 |> Enum.map(fn j -> i / j end)
-                 |> Vector.from_list()
-        assert Index.fetch!(index, i) == word
-        assert Index.lookup!(index, word) == {i, vector}
-      end)
+      word = "a" <> Integer.to_string(i)
+
+      vector =
+        1..10
+        |> Enum.map(fn j -> i / j end)
+        |> Vector.from_list()
+
+      assert Index.fetch!(index, i) == word
+      assert Index.lookup!(index, word) == {i, vector}
+    end)
 
     Index.close(index)
   end

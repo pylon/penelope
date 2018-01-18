@@ -74,17 +74,18 @@ defmodule Penelope.ML.Pipeline do
   fit function.
   """
   @spec fit(
-    context::map,
-    x::[any],
-    y::[any],
-    stages::[{String.t | atom, any}]
-  ) :: [{atom, any}]
+          context :: map,
+          x :: [any],
+          y :: [any],
+          stages :: [{String.t() | atom, any}]
+        ) :: [{atom, any}]
   def fit(context, x, y, stages) do
-    {model, _x, _y} = Enum.reduce(
-      stages,
-      {[], x, y},
-      &do_fit(&1, &2, context)
-    )
+    {model, _x, _y} =
+      Enum.reduce(
+        stages,
+        {[], x, y},
+        &do_fit(&1, &2, context)
+      )
 
     model
   end
@@ -94,20 +95,13 @@ defmodule Penelope.ML.Pipeline do
 
     # fit this stage, if supported
     # otherwise, compile to an atom-keyed map
-    model = call_maybe(
-      module,
-      :fit,
-      [context, x, y, options],
-      fn -> Map.new(options) end
-    )
+    model =
+      call_maybe(module, :fit, [context, x, y, options], fn ->
+        Map.new(options)
+      end)
 
     # transform the stage, if supported
-    x = call_maybe(
-      module,
-      :transform,
-      [model, context, x],
-      fn -> x end
-    )
+    x = call_maybe(module, :transform, [model, context, x], fn -> x end)
 
     # save the compiled model and propagate the transformed x
     {result ++ [{module, model}], x, y}
@@ -116,18 +110,15 @@ defmodule Penelope.ML.Pipeline do
   @doc """
   transforms a list of samples through the pipeline
   """
-  @spec transform(model::[{atom, any}], context::map, x::[any]) :: [any]
+  @spec transform(model :: [{atom, any}], context :: map, x :: [any]) :: [
+          any
+        ]
   def transform(model, context, x) do
     Enum.reduce(model, x, &do_transform(&1, context, &2))
   end
 
   defp do_transform({module, model}, context, x) do
-    call_maybe(
-      module,
-      :transform,
-      [model, context, x],
-      fn -> x end
-    )
+    call_maybe(module, :transform, [model, context, x], fn -> x end)
   end
 
   @doc """
@@ -135,7 +126,10 @@ defmodule Penelope.ML.Pipeline do
 
   This function predicts a list of classes (in the model) for each sample.
   """
-  @spec predict_class(model::[{atom, any}], context::map, x::[any]) :: [any]
+  @spec predict_class(model :: [{atom, any}], context :: map, x :: [any]) ::
+          [
+            any
+          ]
   def predict_class(model, context, x) do
     do_predict(model, context, x, :predict_class)
   end
@@ -146,8 +140,11 @@ defmodule Penelope.ML.Pipeline do
   This function predicts the probability of each class (in a map) for
   each sample.
   """
-  @spec predict_probability(model::[{atom, any}], context::map, x::[any])
-    :: [%{any => float}]
+  @spec predict_probability(
+          model :: [{atom, any}],
+          context :: map,
+          x :: [any]
+        ) :: [%{any => float}]
   def predict_probability(model, context, x) do
     do_predict(model, context, x, :predict_probability)
   end
@@ -156,8 +153,11 @@ defmodule Penelope.ML.Pipeline do
   performs a sequence-to-sequence inference, returning the output
   sequences and sequence probabilities for each sample
   """
-  @spec predict_sequence(model::[{atom, any}], context::map, x::[[any]])
-    :: [{[any], float}]
+  @spec predict_sequence(
+          model :: [{atom, any}],
+          context :: map,
+          x :: [[any]]
+        ) :: [{[any], float}]
   def predict_sequence(model, context, x) do
     do_predict(model, context, x, :predict_sequence)
   end
@@ -166,21 +166,17 @@ defmodule Penelope.ML.Pipeline do
     # at the end of the pipeline, so just call the prediction function
     apply(module, method, [model, context, x])
   end
+
   defp do_predict([{module, model} | models], context, x, method) do
     # in the middle of the pipeline, so call the transform function
-    x = call_maybe(
-      module,
-      :transform,
-      [model, context, x],
-      fn -> x end
-    )
+    x = call_maybe(module, :transform, [model, context, x], fn -> x end)
     do_predict(models, context, x, method)
   end
 
   @doc """
   imports parameters from a serialized model
   """
-  @spec compile(params::[map]) :: [{atom, any}]
+  @spec compile(params :: [map]) :: [{atom, any}]
   def compile(params) do
     Enum.map(_stages = params, &do_compile/1)
   end
@@ -191,14 +187,10 @@ defmodule Penelope.ML.Pipeline do
 
     # perform custom compilation if supported
     # otherwise, compile to an atom-keyed map
-    model = call_maybe(
-      module,
-      :compile,
-      [params],
-      fn ->
+    model =
+      call_maybe(module, :compile, [params], fn ->
         Map.new(params, fn {k, v} -> {String.to_existing_atom(k), v} end)
-      end
-    )
+      end)
 
     {module, model}
   end
@@ -206,7 +198,7 @@ defmodule Penelope.ML.Pipeline do
   @doc """
   exports a runtime model to a serializable data structure
   """
-  @spec export(model::[{atom, any}]) :: [map]
+  @spec export(model :: [{atom, any}]) :: [map]
   def export(model) do
     Enum.map(model, &do_export/1)
   end
@@ -216,12 +208,10 @@ defmodule Penelope.ML.Pipeline do
 
     # perform custom export if supported
     # otherwise, export to a string-keyed map
-    params = call_maybe(
-      module,
-      :export,
-      [model],
-      fn -> Map.new(model, fn {k, v} -> {to_string(k), v} end) end
-    )
+    params =
+      call_maybe(module, :export, [model], fn ->
+        Map.new(model, fn {k, v} -> {to_string(k), v} end)
+      end)
 
     %{"name" => name, "params" => params}
   end
@@ -230,11 +220,11 @@ defmodule Penelope.ML.Pipeline do
   calls a function on a module if it is supported, with a default fallback
   """
   @spec call_maybe(
-    module::atom,
-    function::atom,
-    args::[any],
-    default::function
-  ) :: any
+          module :: atom,
+          function :: atom,
+          args :: [any],
+          default :: function
+        ) :: any
   def call_maybe(module, function, args, default) do
     if function_exported?(module, function, Enum.count(args)) do
       apply(module, function, args)
