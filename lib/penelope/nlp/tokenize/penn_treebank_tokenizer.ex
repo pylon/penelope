@@ -76,10 +76,8 @@ defmodule Penelope.NLP.Tokenize.PennTreebankTokenizer do
     |> String.replace(~r/\s([,;:@%])/, "\\1")
     |> String.replace(~r/([@#$])\s/, "\\1")
     |> String.replace(~r/([^.])\s(\.)([\]\)}>"'\x{2019}]*)\s*$/u, "\\1\\2\\3")
-    |> String.replace(
-         ~r/\s([\]\[\(\)\{\}<>?!\x{2013}\x{2014}\x{2e3a}\x{2e3b}]|--)\s?/u,
-         "\\1"
-    )
+    |> String.replace(~r/\s([\]\)\}>?!\x{2014}\x{2e3b}]|--)/u, "\\1")
+    |> String.replace(~r/([\[\(\{<\x{2013}\x{2e3a}]|--)\s/u, "\\1")
     |> String.replace(~r/\s''/, ~S("))
     |> String.replace(~r/([^'])['\x{2019}]/u, "\\1'")
     # best effort at replacing spaces after full stops
