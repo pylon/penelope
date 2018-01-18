@@ -24,5 +24,6 @@ RUN mix do deps.get, deps.compile
 ADD c_src ./c_src
 ADD lib ./lib
 ADD test ./test
+RUN mkdir priv
 
 ENTRYPOINT ["mix"]
