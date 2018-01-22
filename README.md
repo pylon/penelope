@@ -29,7 +29,7 @@ sudo apt install libblas-dev
 ```elixir
 def deps do
   [
-    {:penelope, "~> 0.3"}
+    {:penelope, "~> 0.4"}
   ]
 end
 ```
