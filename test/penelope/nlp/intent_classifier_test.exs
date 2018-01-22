@@ -33,14 +33,20 @@ defmodule Penelope.NLP.IntentClassifierTest do
   test "predict" do
     model = IntentClassifier.fit(%{}, @x_train, @y_train, @pipeline)
 
+    defaults = %{
+      "intent_1" => 0.0,
+      "intent_2" => 0.0,
+      "intent_3" => 0.0
+    }
+
     unseen = IntentClassifier.predict_intent(model, %{}, "unseen sample")
-    assert unseen === {"intent_0", %{}}
+    assert unseen === {Map.put(defaults, "intent_0", 1.0), %{}}
 
     for {x, y, p} <- Enum.zip([@x_train, @y_train, @y_param]) do
       {y_intent, _y_tags} = y
 
       assert IntentClassifier.predict_intent(model, %{}, x) ===
-               {y_intent, p}
+               {Map.put(defaults, y_intent, 1.0), p}
     end
   end
 
@@ -60,11 +66,15 @@ defmodule Penelope.NLP.IntentClassifierTest do
 
   defmodule Classifier do
     def fit(_context, x, y, _options) do
-      %{memo: Map.new(Enum.zip(x, y))}
+      %{memo: Map.new(Enum.zip(x, y)), classes: Enum.uniq(y)}
     end
 
-    def predict_class(model, _context, x) do
-      Enum.map(x, &Map.get(model.memo, &1, "intent_0"))
+    def predict_probability(model, _context, x) do
+      Enum.map(x, fn x ->
+        c = Map.get(model.memo, x, "intent_0")
+        p = Map.new(model.classes, &{&1, 0.0})
+        Map.put(p, c, 1.0)
+      end)
     end
   end
 
