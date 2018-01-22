@@ -93,12 +93,34 @@ defmodule Penelope.ML.Linear.ClassifierTest do
     assert predictions === @y_train
   end
 
-  test "predict probability" do
+  test "predict svm probability" do
     assert_raise(fn ->
       model = Classifier.fit(%{}, @x_train, @y_train)
       Classifier.predict_probability(model, %{}, @x_train)
     end)
 
+    model = Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+
+    predictions =
+      model
+      |> Classifier.predict_probability(%{}, @x_train)
+      |> Enum.map(&Enum.max_by(&1, fn {_, v} -> v end))
+      |> Enum.map(fn {k, _} -> k end)
+
+    assert predictions === @y_train
+
+    probabilities =
+      model
+      |> Classifier.predict_probability(%{}, @x_train)
+      |> Enum.map(&Enum.map(&1, fn {_, v} -> v end))
+      |> Enum.map(&Enum.sum/1)
+
+    for p <- probabilities do
+      assert float_equals(p, 1.0)
+    end
+  end
+
+  test "predict logistic probability" do
     model = Classifier.fit(%{}, @x_train, @y_train, solver: :l2r_lr)
 
     predictions =
@@ -108,6 +130,16 @@ defmodule Penelope.ML.Linear.ClassifierTest do
       |> Enum.map(fn {k, _} -> k end)
 
     assert predictions === @y_train
+
+    probabilities =
+      model
+      |> Classifier.predict_probability(%{}, @x_train)
+      |> Enum.map(&Enum.map(&1, fn {_, v} -> v end))
+      |> Enum.map(&Enum.sum/1)
+
+    for p <- probabilities do
+      assert float_equals(p, 1.0)
+    end
   end
 
   test "global parallelism" do
@@ -154,6 +186,14 @@ defmodule Penelope.ML.Linear.ClassifierTest do
   end
 
   @tag :stress
+  test "fit svm probability stress" do
+    for _ <- 1..1_000_000 do
+      Classifier.fit(%{}, @x_train, @y_train, probability?: true)
+      :erlang.garbage_collect()
+    end
+  end
+
+  @tag :stress
   test "export/compile stress" do
     model = Classifier.fit(%{}, @x_train, @y_train)
 
@@ -167,6 +207,17 @@ defmodule Penelope.ML.Linear.ClassifierTest do
   @tag :stress
   test "predict stress" do
     model = Classifier.fit(%{}, @x_train, @y_train, solver: :l2r_lr)
+
+    for _ <- 1..4_000_000 do
+      Classifier.predict_class(model, %{}, @x_train)
+      Classifier.predict_probability(model, %{}, @x_train)
+      :erlang.garbage_collect()
+    end
+  end
+
+  @tag :stress
+  test "predict svm probability stress" do
+    model = Classifier.fit(%{}, @x_train, @y_train, probability?: true)
 
     for _ <- 1..4_000_000 do
       Classifier.predict_class(model, %{}, @x_train)
