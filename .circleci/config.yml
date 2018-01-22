@@ -19,7 +19,6 @@ jobs:
       - run: mix format --check-formatted
       - run: mix test
       - run: mix credo --strict -i todo
-      #- run: mix dogma
       - run: mix dialyzer --halt-exit-status
       - save_cache:
           key: build-{{checksum "mix.lock"}}
