@@ -8,6 +8,11 @@ defmodule Penelope.ML.Linear.Classifier do
   Features are represented as lists of dense Vector instances. Classes can
   be any value, and class labels for training are lists of these.
 
+  The basic functionality of liblinear is extended to include predicting
+  calibrated probabilites for SVM models, using Platt scaling. Binary Platt
+  scaling is extended to OVR multiclass using simple normalization. This
+  feature can be enabled by setting the `:probability?` option.
+
   Model parameters are elixir analogs of those supported by liblinear. See
   https://github.com/cjlin1/liblinear for details.
   """
@@ -26,6 +31,7 @@ defmodule Penelope.ML.Linear.Classifier do
   |`weights`     |class weights map, `:auto` for balanced  |`:auto`          |
   |`epsilon`     |tolerance for stopping                   |0.001            |
   |`bias`        |intercept bias (-1 for no intercept)     |1.0              |
+  |`probability?`|enable class probabilities for svm?      |false            |
 
   ### solver types
   |type                  |description                              |
@@ -74,6 +80,8 @@ defmodule Penelope.ML.Linear.Classifier do
       l when is_binary(l) -> Vector.to_list(l)
       x -> x
     end)
+    |> Map.update!(:prob_a, fn v -> v && Vector.to_list(v) end)
+    |> Map.update!(:prob_b, fn v -> v && Vector.to_list(v) end)
     |> Map.new(fn {k, v} -> {to_string(k), v} end)
   end
 
@@ -92,6 +100,8 @@ defmodule Penelope.ML.Linear.Classifier do
         l when is_list(l) -> Vector.from_list(l)
         x -> x
       end)
+      |> Map.update(:prob_a, nil, fn v -> v && Vector.from_list(v) end)
+      |> Map.update(:prob_b, nil, fn v -> v && Vector.from_list(v) end)
       |> NIF.lin_compile()
 
     %{lin: model, classes: classes}
@@ -144,7 +154,8 @@ defmodule Penelope.ML.Linear.Classifier do
       weights: weights,
       epsilon: Keyword.get(options, :epsilon, 1.0e-4) / 1,
       p: 0.0,
-      bias: Keyword.get(options, :bias, 1) / 1
+      bias: Keyword.get(options, :bias, 1) / 1,
+      probability?: Keyword.get(options, :probability?, false)
     }
   end
 

@@ -10,10 +10,11 @@ defmodule Penelope.NLP.IntentClassifier do
   utterances into a list of tokens. This pipeline is executed first, and
   its results are run through the classifier/recognizer pipelines.
 
-  Classification results are returned as a tuple of <intent, parameters>,
-  where intent is the name of the classified intent, and parameters is
-  a name->value map. Intent names, parameter names and parameter values are
-  all strings.
+  Classification results are returned as a tuple of <intents, parameters>,
+  where intents is the map of names to classification probabilities, and
+  parameters is a name->value map. Intent names, parameter names and
+  parameter values are all strings. Probabilities are all floats that should
+  sum to 1.
 
   Example:
     pipeline = %{
@@ -31,7 +32,7 @@ defmodule Penelope.NLP.IntentClassifier do
     ]
     classifier = Penelope.NLP.IntentClassifier.fit(%{}, x, y, pipeline)
 
-    {intent, params} = Penelope.NLP.IntentClassifier.predict_intent(
+    {intents, params} = Penelope.NLP.IntentClassifier.predict_intent(
       classifier,
       %{},
       "you have three pears"
@@ -90,16 +91,18 @@ defmodule Penelope.NLP.IntentClassifier do
           context :: map,
           x :: String.t()
         ) ::
-          {intent :: String.t(),
+          {intents :: %{(intent :: String.t()) => probability :: float},
            params :: %{(name :: String.t()) => value :: String.t()}}
   def predict_intent(model, context, x) do
     # tokenize the utterance
     [tokens] = Pipeline.transform(model.tokenizer, context, [x])
 
-    # predict the intent name
-    [intent] = Pipeline.predict_class(model.classifier, context, [tokens])
+    # predict the intent probabilities
+    [intents] =
+      Pipeline.predict_probability(model.classifier, context, [tokens])
 
     # predict the tag sequence
+    {intent, _probability} = Enum.max_by(intents, fn {_, v} -> v end)
     context = Map.put(context, :intent, intent)
 
     [{tags, _probability}] =
@@ -114,7 +117,7 @@ defmodule Penelope.NLP.IntentClassifier do
         {k, v}
       end)
 
-    {intent, params}
+    {intents, params}
   end
 
   # parse IOB tags

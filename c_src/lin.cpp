@@ -10,17 +10,26 @@
  * . x is a feature matrix/vector/value
  * . y is a class vector/value
  *
+ * The basic functionality of liblinear is extended to include predicting
+ * calibrated probabilites for SVM models, using Platt scaling. Binary Platt
+ * scaling is extended to OVR multiclass using simple normalization.
+ *
  * see https://github.com/cjlin1/liblinear for details
  *
  ***************************************************************************/
 /*-------------------[       Pre Include Defines       ]-------------------*/
 /*-------------------[      Library Include Files      ]-------------------*/
+#include <math.h>
 /*-------------------[      Project Include Files      ]-------------------*/
 #include "deps/liblinear/linear.h"
 #include "penelope.hpp"
 /*-------------------[      Macros/Constants/Types     ]-------------------*/
+// extend the linear model structure to include an optional calibration model
+typedef struct tag_model : model {
+   double* prob_a;
+   double* prob_b;
+} LINEAR_MODEL;
 typedef struct problem      LINEAR_PROBLEM;
-typedef struct model        LINEAR_MODEL;
 typedef struct feature_node LINEAR_NODE;
 typedef struct parameter    LINEAR_PARAM;
 /*-------------------[        Global Variables         ]-------------------*/
@@ -28,6 +37,10 @@ typedef struct parameter    LINEAR_PARAM;
 /*-------------------[        Module Variables         ]-------------------*/
 static ErlNifResourceType* g_model_type = NULL;
 /*-------------------[        Module Prototypes        ]-------------------*/
+static bool erl2lin_must_calibrate (
+   ErlNifEnv*    env,
+   ERL_NIF_TERM  options,
+   LINEAR_PARAM& params);
 static void erl2lin_problem (
    ErlNifEnv*      env,
    ERL_NIF_TERM    x,
@@ -65,12 +78,24 @@ static ERL_NIF_TERM lin2erl_model (
    ErlNifEnv*    env,
    LINEAR_MODEL* model);
 static LINEAR_MODEL* lin2lin_model (
-   LINEAR_MODEL* source);
+   model*  source,
+   double* prob_a,
+   double* prob_b);
 static void nif_destruct_model (
    ErlNifEnv* env,
    void*      object);
 static void lin_print (
    const char* message);
+static void lin_calibrate_train (
+   int     m,
+   double* decision,
+   double* labels,
+   double& prob_a,
+   double& prob_b);
+static double lin_calibrate_predict (
+   double decision,
+   double prob_a,
+   double prob_b);
 /*-------------------[         Implementation          ]-------------------*/
 /*-----------< FUNCTION: nif_lin_init >--------------------------------------
 // Purpose:    linear module initialization
@@ -118,7 +143,11 @@ ERL_NIF_TERM nif_lin_train (
    // train the linear model
    LINEAR_PROBLEM problem; memset(&problem, 0, sizeof(LINEAR_PROBLEM));
    LINEAR_PARAM   params;  memset(&params, 0, sizeof(LINEAR_PARAM));
-   LINEAR_MODEL*  model    = NULL;
+   model*         linear   = NULL;
+   double*        prob_a   = NULL;
+   double*        prob_b   = NULL;
+   double*        prob_d   = NULL;
+   double*        prob_l   = NULL;
    LINEAR_MODEL** resource = NULL;
    ERL_NIF_TERM result;
    try {
@@ -128,13 +157,38 @@ ERL_NIF_TERM nif_lin_train (
       const char* errors = check_parameter(&problem, &params);
       if (errors)
          throw NifError(errors);
-      // train the model
-      model = train(&problem, &params);
+      // train the prediction model
+      linear = CHECKALLOC(train(&problem, &params));
+      // train the calibration model
+      if (erl2lin_must_calibrate(env, argv[2], params)) {
+         int model_count = linear->nr_class == 2 ? 1 : linear->nr_class;
+         prob_a = nif_alloc<double>(model_count);
+         prob_b = nif_alloc<double>(model_count);
+         prob_d = nif_alloc<double>(problem.l);
+         prob_l = nif_alloc<double>(problem.l);
+         for (int i = 0; i < model_count; i++) {
+            // train a calibration logistic regression model per class
+            for (int j = 0; j < problem.l; j++) {
+               double decision[model_count];
+               double label = predict_values(linear, problem.x[j], decision);
+               prob_d[j] = decision[i];
+               prob_l[j] = label == linear->label[i] ? 1 : -1;
+            }
+            lin_calibrate_train(
+               problem.l,
+               prob_d,
+               prob_l,
+               prob_a[i],
+               prob_b[i]);
+         }
+      }
       // create an erlang resource to wrap the model
       CHECKALLOC(resource = (LINEAR_MODEL**)enif_alloc_resource(
          g_model_type,
          sizeof(LINEAR_MODEL*)));
-      CHECKALLOC(*resource = lin2lin_model(model));
+      CHECKALLOC(*resource = lin2lin_model(linear, prob_a, prob_b));
+      prob_a = NULL;
+      prob_b = NULL;
       result = enif_make_resource(env, resource);
       // relinquish the resource to erlang
       enif_release_resource(resource);
@@ -144,8 +198,14 @@ ERL_NIF_TERM nif_lin_train (
       result = e.to_term(env);
    }
    // free the model using the liblinear allocator
-   if (model != NULL)
-      free_and_destroy_model(&model);
+   if (linear != NULL)
+      free_and_destroy_model(&linear);
+   if (prob_a != NULL) {
+      nif_free(prob_a);
+      nif_free(prob_b);
+   }
+   nif_free(prob_d);
+   nif_free(prob_l);
    // release the training parameters
    erl2lin_free_problem(&problem);
    erl2lin_free_params(&params);
@@ -264,12 +324,35 @@ ERL_NIF_TERM nif_lin_predict_probability (
    if (!enif_is_binary(env, argv[1]))
       return enif_make_badarg(env);
    try {
-      CHECK(check_probability_model(model), "probability_not_trained");
+      CHECK(check_probability_model(model) || model->prob_a,
+         "probability_not_trained");
       // extract the feature vector
       features = erl2lin_feature(env, argv[1], model->bias);
-      // predict the class probabilities
+      // predict the class probabilities directly if supported
       double prob[model->nr_class];
-      predict_probability(model, features, prob);
+      if (check_probability_model(model))
+         predict_probability(model, features, prob);
+      else {
+         // otherwise, compute calibrated probabilities
+         int model_count = model->nr_class == 2 ? 1 : model->nr_class;
+         double decision[model_count];
+         predict_values(model, features, decision);
+         for (int i = 0; i < model_count; i++)
+            prob[i] = lin_calibrate_predict(
+               decision[i],
+               model->prob_a[i],
+               model->prob_b[i]);
+         // normalize the calibrated probabilities
+         if (model_count == 1)
+            prob[1] = 1 - prob[0];
+         else {
+            double sum = 0;
+            for (int i = 0; i < model->nr_class; i++)
+               sum += prob[i];
+            for (int i = 0; i < model->nr_class; i++)
+               prob[i] = prob[i] / sum;
+         }
+      }
       // return the list of probabilities
       ERL_NIF_TERM results[model->nr_class];
       for (int i = 0; i < model->nr_class; i++)
@@ -292,6 +375,37 @@ ERL_NIF_TERM nif_lin_predict_probability (
 void nif_destruct_model (ErlNifEnv* env, void* object)
 {
    erl2lin_free_model(*(LINEAR_MODEL**)object);
+}
+/*-----------< FUNCTION: erl2lin_must_calibrate >----------------------------
+// Purpose:    determines whether a calibration model should be built
+// Parameters: env     - current erlang environment
+//             options - training parameters
+//             params  - linear model parameters
+// Returns:    true if a calibration model is required
+//             false otherwise
+---------------------------------------------------------------------------*/
+bool erl2lin_must_calibrate (
+   ErlNifEnv*    env,
+   ERL_NIF_TERM  options,
+   LINEAR_PARAM& params)
+{
+   ERL_NIF_TERM key;
+   ERL_NIF_TERM value;
+   switch (params.solver_type) {
+      case L2R_L2LOSS_SVC_DUAL:
+      case L2R_L2LOSS_SVC:
+      case L2R_L1LOSS_SVC_DUAL:
+      case MCSVM_CS:
+      case L1R_L2LOSS_SVC:
+         key = enif_make_atom(env, "probability?");
+         CHECK(enif_get_map_value(env, options, key, &value), "missing_prob");
+         CHECK(enif_is_atom(env, value), "invalid_prob");
+         return enif_is_identical(value, enif_make_atom(env, "true"))
+            ? true
+            : false;
+      default:
+         return false;
+   }
 }
 /*-----------< FUNCTION: erl2lin_problem >-----------------------------------
 // Purpose:    constructs a linear problem from feature/target vectors
@@ -402,6 +516,24 @@ LINEAR_MODEL* erl2lin_model (ErlNifEnv* env, ERL_NIF_TERM params)
             model->w[model->nr_feature * model_count + i] =
                ((float*)vector.data)[i];
       }
+      // extract prob_a
+      key = enif_make_atom(env, "prob_a");
+      CHECK(enif_get_map_value(env, params, key, &value), "missing_prob_a");
+      if (!enif_is_identical(value, enif_make_atom(env, "nil"))) {
+         CHECK(enif_inspect_binary(env, value, &vector), "invalid_prob_a");
+         model->prob_a = nif_alloc<double>(vector.size / sizeof(float));
+         for (int i = 0; i < (int)(vector.size / sizeof(float)); i++)
+            model->prob_a[i] = ((float*)vector.data)[i];
+      }
+      // extract prob_b
+      key = enif_make_atom(env, "prob_b");
+      CHECK(enif_get_map_value(env, params, key, &value), "missing_prob_b");
+      if (!enif_is_identical(value, enif_make_atom(env, "nil"))) {
+         CHECK(enif_inspect_binary(env, value, &vector), "invalid_prob_b");
+         model->prob_b = nif_alloc<double>(vector.size / sizeof(float));
+         for (int i = 0; i < (int)(vector.size / sizeof(float)); i++)
+            model->prob_b[i] = ((float*)vector.data)[i];
+      }
       return model;
    } catch (NifError& e) {
       erl2lin_free_model(model);
@@ -418,10 +550,10 @@ LINEAR_MODEL* erl2lin_model (ErlNifEnv* env, ERL_NIF_TERM params)
 // Returns:    pointer to params
 ---------------------------------------------------------------------------*/
 void erl2lin_params (
-   ErlNifEnv*   env,
-   ERL_NIF_TERM options,
-   LINEAR_PARAM*   params,
-   int          training) {
+   ErlNifEnv*    env,
+   ERL_NIF_TERM  options,
+   LINEAR_PARAM* params,
+   int           training) {
    ERL_NIF_TERM key;
    ERL_NIF_TERM value;
    // decode solver type
@@ -700,14 +832,40 @@ ERL_NIF_TERM lin2erl_model (ErlNifEnv* env, LINEAR_MODEL* model)
       value = enif_make_binary(env, &vector);
    }
    CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
+   // encode prob_a
+   key = enif_make_atom(env, "prob_a");
+   if (model->prob_a) {
+      CHECKALLOC(enif_alloc_binary(model_count * sizeof(float), &vector));
+      for (int i = 0; i < model_count; i++)
+         ((float*)vector.data)[i] = model->prob_a[i];
+      value = enif_make_binary(env, &vector);
+      CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
+   } else {
+      value = enif_make_atom(env, "nil");
+      CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
+   }
+   // encode prob_b
+   key = enif_make_atom(env, "prob_b");
+   if (model->prob_b) {
+      CHECKALLOC(enif_alloc_binary(model_count * sizeof(float), &vector));
+      for (int i = 0; i < model_count; i++)
+         ((float*)vector.data)[i] = model->prob_b[i];
+      value = enif_make_binary(env, &vector);
+      CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
+   } else {
+      value = enif_make_atom(env, "nil");
+      CHECKALLOC(enif_make_map_put(env, result, key, value, &result));
+   }
    return result;
 }
 /*-----------< FUNCTION: lin2lin_model >-------------------------------------
 // Purpose:    clones a linear model structure
 // Parameters: source - linear model structure to copy
+//             prob_a - calibration probability slope variables
+//             prob_b - calibration probability intercept variables
 // Returns:    cloned linear model
 ---------------------------------------------------------------------------*/
-LINEAR_MODEL* lin2lin_model (LINEAR_MODEL* source)
+LINEAR_MODEL* lin2lin_model (model* source, double* prob_a, double* prob_b)
 {
    LINEAR_MODEL* target = nif_alloc<LINEAR_MODEL>();
    try {
@@ -718,6 +876,8 @@ LINEAR_MODEL* lin2lin_model (LINEAR_MODEL* source)
       target->bias               = source->bias;
       target->param.weight_label = NULL;
       target->param.weight       = NULL;
+      target->prob_a             = prob_a;
+      target->prob_b             = prob_b;
       // copy weights
       int model_count = source->nr_class == 2
          ? 1
@@ -741,9 +901,13 @@ LINEAR_MODEL* lin2lin_model (LINEAR_MODEL* source)
 ---------------------------------------------------------------------------*/
 void erl2lin_free_model (LINEAR_MODEL* model)
 {
-   erl2lin_free_params(&model->param);
-   nif_free(model->w);
-   nif_free(model->label);
+   if (model != NULL) {
+      erl2lin_free_params(&model->param);
+      nif_free(model->w);
+      nif_free(model->label);
+      nif_free(model->prob_a);
+      nif_free(model->prob_b);
+   }
    nif_free(model);
 }
 /*-----------< FUNCTION: lin_print >-----------------------------------------
@@ -753,4 +917,147 @@ void erl2lin_free_model (LINEAR_MODEL* model)
 ---------------------------------------------------------------------------*/
 void lin_print (const char* message) {
    // suppress debug output
+}
+/*-----------< FUNCTION: lin_calibrate_train >-------------------------------
+// Purpose:    calibrates decision outputs to class probabilities using
+//             univariate binary logistic regression
+//             lifted from libsvm sigmoid_train, which is not exported
+// Parameters: m        - number of training examples
+//             decision - decision ouputs for each training example
+//                        used as X in the calibration model
+//             labels   - class labels for each training example (pos/neg)
+//             prob_a   - return regression slope parameter via here
+//             prob_b   - return regression intercept parameter via here
+// Returns:    none
+---------------------------------------------------------------------------*/
+void lin_calibrate_train (
+   int     m,
+   double* decision,
+   double* labels,
+   double& prob_a,
+   double& prob_b)
+{
+   double prior1=0, prior0 = 0;
+   int i;
+
+   for (i=0;i<m;i++)
+      if (labels[i] > 0) prior1+=1;
+      else prior0+=1;
+
+   int max_iter=100; // Maximal number of iterations
+   double min_step=1e-10;  // Minimal step taken in line search
+   double sigma=1e-12;  // For numerically strict PD of Hessian
+   double eps=1e-5;
+   double hiTarget=(prior1+1.0)/(prior1+2.0);
+   double loTarget=1/(prior0+2.0);
+   double *t=nif_alloc<double>(m);
+   double fApB,p,q,h11,h22,h21,g1,g2,det,dA,dB,gd,stepsize;
+   double newA,newB,newf,d1,d2;
+   int iter;
+
+   // Initial Point and Initial Fun Value
+   prob_a=0.0; prob_b=log((prior0+1.0)/(prior1+1.0));
+   double fval = 0.0;
+
+   for (i=0;i<m;i++)
+   {
+      if (labels[i]>0) t[i]=hiTarget;
+      else t[i]=loTarget;
+      fApB = decision[i]*prob_a+prob_b;
+      if (fApB>=0)
+         fval += t[i]*fApB + log(1+exp(-fApB));
+      else
+         fval += (t[i] - 1)*fApB +log(1+exp(fApB));
+   }
+   for (iter=0;iter<max_iter;iter++)
+   {
+      // Update Gradient and Hessian (use H' = H + sigma I)
+      h11=sigma; // numerically ensures strict PD
+      h22=sigma;
+      h21=0.0;g1=0.0;g2=0.0;
+      for (i=0;i<m;i++)
+      {
+         fApB = decision[i]*prob_a+prob_b;
+         if (fApB >= 0)
+         {
+            p=exp(-fApB)/(1.0+exp(-fApB));
+            q=1.0/(1.0+exp(-fApB));
+         }
+         else
+         {
+            p=1.0/(1.0+exp(fApB));
+            q=exp(fApB)/(1.0+exp(fApB));
+         }
+         d2=p*q;
+         h11+=decision[i]*decision[i]*d2;
+         h22+=d2;
+         h21+=decision[i]*d2;
+         d1=t[i]-p;
+         g1+=decision[i]*d1;
+         g2+=d1;
+      }
+
+      // Stopping Criteria
+      if (fabs(g1)<eps && fabs(g2)<eps)
+         break;
+
+      // Finding Newton direction: -inv(H') * g
+      det=h11*h22-h21*h21;
+      dA=-(h22*g1 - h21 * g2) / det;
+      dB=-(-h21*g1+ h11 * g2) / det;
+      gd=g1*dA+g2*dB;
+
+
+      stepsize = 1;     // Line Search
+      while (stepsize >= min_step)
+      {
+         newA = prob_a + stepsize * dA;
+         newB = prob_b + stepsize * dB;
+
+         // New function value
+         newf = 0.0;
+         for (i=0;i<m;i++)
+         {
+            fApB = decision[i]*newA+newB;
+            if (fApB >= 0)
+               newf += t[i]*fApB + log(1+exp(-fApB));
+            else
+               newf += (t[i] - 1)*fApB +log(1+exp(fApB));
+         }
+         // Check sufficient decrease
+         if (newf<fval+0.0001*stepsize*gd)
+         {
+            prob_a=newA;prob_b=newB;fval=newf;
+            break;
+         }
+         else
+            stepsize = stepsize / 2.0;
+      }
+
+      CHECK(stepsize >= min_step, "calibration line search failed");
+   }
+
+   CHECK(iter < max_iter, "exceeded calibration max iterations");
+   nif_free(t);
+}
+/*-----------< FUNCTION: lin_calibrate_predict >-----------------------------
+// Purpose:    produces a calibrated probability estimate for a
+//             non-probabilistic classifier (like svm)
+//             lifted from libsvm sigmoid_predict, which is not exported
+// Parameters: decision - decision output, used as x in the calibration model
+//             prob_a   - regression slope parameter
+//             prob_b   - regression intercept parameter
+// Returns:    none
+---------------------------------------------------------------------------*/
+double lin_calibrate_predict (
+   double decision,
+   double prob_a,
+   double prob_b)
+{
+   double fApB = decision*prob_a+prob_b;
+   // 1-p used later; avoid catastrophic cancellation
+   if (fApB >= 0)
+      return exp(-fApB)/(1.0+exp(-fApB));
+   else
+      return 1.0/(1+exp(fApB)) ;
 }
