@@ -15,7 +15,11 @@ defmodule Penelope.Mixfile do
       deps: deps(),
       package: package(),
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [coveralls: :test, "coveralls.html": :test],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.post": :test
+      ],
       dialyzer: [
         ignore_warnings: ".dialyzerignore",
         plt_add_deps: :transitive

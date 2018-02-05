@@ -20,6 +20,7 @@ jobs:
       - run: mix test
       - run: mix credo --strict -i todo
       - run: mix dialyzer --halt-exit-status
+      - run: mix coveralls.post
       - save_cache:
           key: build-{{checksum "mix.lock"}}
           paths:
