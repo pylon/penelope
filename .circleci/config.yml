@@ -20,7 +20,7 @@ jobs:
       - run: mix test
       - run: mix credo --strict -i todo
       - run: mix dialyzer --halt-exit-status
-      - run: mix coveralls.post
+      - run: mix coveralls.post --sha $(git rev-parse HEAD) --branch $(git rev-parse --abbrev-ref HEAD)
       - save_cache:
           key: build-{{checksum "mix.lock"}}
           paths:
