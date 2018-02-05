@@ -2,6 +2,12 @@
 
 Natural Language Processing (NLP) and Machine Learning (ML) library for Elixir.
 
+## Status
+[![CircleCI](http://circleci-badges-max.herokuapp.com/img/pylon/penelope?token=:circle-ci-token)](https://circleci.com/gh/pylon/penelope)
+[![Hex](http://img.shields.io/hexpm/v/penelope.svg?style=flat)](https://hex.pm/packages/penelope)
+
+The API reference is available [here](https://hexdocs.pm/penelope/).
+
 ## Installation
 
 ### Dependencies
