@@ -5,7 +5,7 @@ defmodule Penelope.Mixfile do
     [
       app: :penelope,
       name: "Penelope",
-      version: "0.4.0",
+      version: "0.4.1",
       elixir: "~> 1.6",
       compilers: ["nif" | Mix.compilers()],
       aliases: [clean: ["clean", "clean.nif"]],
@@ -59,7 +59,13 @@ defmodule Penelope.Mixfile do
 
   defp package do
     [
-      files: ["mix.exs", "README.md", "lib", "c_src", "priv/.gitignore"],
+      files: [
+        "mix.exs",
+        "README.md",
+        "lib",
+        "c_src/**/{*.c,*.cpp,*.h,*.hpp,Makefile,*.makefile}",
+        "priv/.gitignore"
+      ],
       maintainers: ["Brent M. Spell", "Josh Ziegler"],
       licenses: ["Apache 2.0"],
       links: %{
