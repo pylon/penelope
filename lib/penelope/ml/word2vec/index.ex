@@ -83,7 +83,9 @@ defmodule Penelope.ML.Word2vec.Index do
 
     options = [file: file, access: :read_write, type: :set, min_no_slots: 1]
 
-    with {:ok, file} <- :dets.open_file(:word2vec_header, options),
+    name = String.to_atom(path)
+
+    with {:ok, file} <- :dets.open_file(name, options),
          :ok <- :dets.insert(file, {:header, header}) do
       file
     else
@@ -173,7 +175,9 @@ defmodule Penelope.ML.Word2vec.Index do
 
     options = [file: file, access: :read, type: :set]
 
-    with {:ok, file} <- :dets.open_file(:word2vec_header, options),
+    name = String.to_atom(path)
+
+    with {:ok, file} <- :dets.open_file(name, options),
          [{:header, header}] <- :dets.lookup(file, :header) do
       {file, header}
     else
