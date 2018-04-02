@@ -10,7 +10,7 @@ defmodule Penelope.ML.Text.TokenFilterTest do
       ["another", "test", "Sentence"]
     ]
 
-    stopwords = ["test", "sentence"]
+    tokens = ["test", "sentence"]
 
     expect = [
       [],
@@ -18,6 +18,6 @@ defmodule Penelope.ML.Text.TokenFilterTest do
       ["another", "Sentence"]
     ]
 
-    assert TokenFilter.transform(%{stopwords: stopwords}, %{}, x) === expect
+    assert TokenFilter.transform(%{tokens: tokens}, %{}, x) === expect
   end
 end
