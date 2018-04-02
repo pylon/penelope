@@ -93,7 +93,7 @@ defmodule Penelope.ML.Linear.Classifier do
     model =
       params
       |> Map.new(fn {k, v} -> {String.to_existing_atom(k), v} end)
-      |> Map.update!(:solver, &String.to_existing_atom/1)
+      |> Map.update!(:solver, &String.to_atom/1)
       |> Map.put(:classes, Enum.to_list(0..(length(classes) - 1)))
       |> Map.update!(:coef, fn l -> Enum.map(l, &Vector.from_list/1) end)
       |> Map.update!(:intercept, fn
