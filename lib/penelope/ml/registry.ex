@@ -15,6 +15,7 @@ defmodule Penelope.ML.Registry do
     feature_merge: Penelope.ML.Feature.MergeFeaturizer,
     context_featurizer: Penelope.ML.Feature.ContextFeaturizer,
     lowercase_preprocessor: Penelope.ML.Text.LowercasePreprocessor,
+    token_filter: Penelope.ML.Text.TokenFilter,
     ptb_tokenizer: Penelope.ML.Text.PTBTokenizer,
     ptb_digit_tokenizer: Penelope.ML.Text.PTBDigitTokenizer,
     count_vectorizer: Penelope.ML.Text.CountVectorizer,
