@@ -19,23 +19,24 @@ defmodule Penelope.NLP.IntentClassifier do
   Example:
     pipeline = %{
       tokenizer: [{:ptb_tokenizer, []}],
-      classifier: [{:count_vectorizer, []}, {:svm_classifier, [c: 2.0]}],
+      classifier: [{:count_vectorizer, []},
+                   {:linear_classifier, [c: 2.0, probability?: true]}],
       recognizer: [{:crf_tagger, []}],
     }
     x = [
       "you have four pears",
-      "these one hundred apples"
+      "three hundred apples would be a lot"
     ]
     y = [
-      {"intent_2", ["o", "o", "b_num", "b_fruit"]},
-      {"intent_3", ["o", "b_num", "i_num", "b_fruit"]}
+      {"intent_1", ["o", "o", "b_count", "b_fruit"]},
+      {"intent_2", ["b_count", "i_count", "b_fruit", "o", "o", "o", "o"]}
     ]
     classifier = Penelope.NLP.IntentClassifier.fit(%{}, x, y, pipeline)
 
     {intents, params} = Penelope.NLP.IntentClassifier.predict_intent(
       classifier,
       %{},
-      "you have three pears"
+      "I have three bananas"
     )
   """
 
