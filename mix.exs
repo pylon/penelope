@@ -14,6 +14,7 @@ defmodule Penelope.Mixfile do
       description: description(),
       deps: deps(),
       package: package(),
+      source_url: "https://github.com/pylon/penelope",
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
         coveralls: :test,
