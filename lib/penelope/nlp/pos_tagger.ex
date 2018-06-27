@@ -22,32 +22,20 @@ defmodule Penelope.NLP.POSTagger do
         }
 
   @doc """
-  Fits the tagger model. The following keys may be fed to `pipelines`
-  to include custom components in the tagger pipeline:
-
-  |key               |default                       |
-  |------------------|------------------------------|
-  |`featurizer`      |`[{:pos_featurizer, []}]`     |
-  |`tagger`          |`[{:crf_tagger, []}]`         |
+  Fits the tagger model. Custom featurizers may be supplied.
   """
   @spec fit(
           context :: map,
           x :: [tokens :: [String.t()]],
           y :: [tags :: [String.t()]],
-          pipelines :: keyword
+          featurizers :: [{atom | String.t(), [any]}]
         ) :: model
-  def fit(context, x, y, pipelines \\ []) do
-    featurizer_config =
-      Keyword.get(pipelines, :featurizer, [{:pos_featurizer, []}])
-
-    tagger_config = Keyword.get(pipelines, :tagger, [{:crf_tagger, []}])
-
-    featurizer = Pipeline.fit(context, x, y, featurizer_config)
-    features = Pipeline.transform(featurizer, context, x)
+  def fit(context, x, y, featurizers \\ [{:pos_featurizer, []}]) do
+    pipeline = featurizers ++ [{:crf_tagger, []}]
 
     %{
-      tagger: Pipeline.fit(context, features, y, tagger_config),
-      featurizer: featurizer
+      tagger: Pipeline.fit(context, x, y, pipeline),
+      featurizer: featurizers
     }
   end
 
@@ -64,10 +52,8 @@ defmodule Penelope.NLP.POSTagger do
           {String.t(), String.t()}
         ]
   def tag(model, context, tokens) do
-    features = Pipeline.transform(model.featurizer, context, [tokens])
-
     [{tags, _probability}] =
-      Pipeline.predict_sequence(model.tagger, context, features)
+      Pipeline.predict_sequence(model.tagger, context, [tokens])
 
     Enum.zip(tokens, tags)
   end

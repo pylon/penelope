@@ -23,7 +23,6 @@ defmodule Penelope.ML.Registry do
     pos_featurizer: Penelope.ML.Text.POSFeaturizer,
     token_featurizer: Penelope.ML.Text.TokenFeaturizer,
     word2vec_mean_vectorizer: Penelope.ML.Word2vec.MeanVectorizer,
-    pos_tagger: Penelope.NLP.POSTagger,
     linear_classifier: Penelope.ML.Linear.Classifier,
     svm_classifier: Penelope.ML.SVM.Classifier,
     crf_tagger: Penelope.ML.CRF.Tagger
