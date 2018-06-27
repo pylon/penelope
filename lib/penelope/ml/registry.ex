@@ -20,6 +20,7 @@ defmodule Penelope.ML.Registry do
     ptb_digit_tokenizer: Penelope.ML.Text.PTBDigitTokenizer,
     count_vectorizer: Penelope.ML.Text.CountVectorizer,
     regex_vectorizer: Penelope.ML.Text.RegexVectorizer,
+    pos_featurizer: Penelope.ML.Text.POSFeaturizer,
     token_featurizer: Penelope.ML.Text.TokenFeaturizer,
     word2vec_mean_vectorizer: Penelope.ML.Word2vec.MeanVectorizer,
     linear_classifier: Penelope.ML.Linear.Classifier,
