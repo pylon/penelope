@@ -16,10 +16,7 @@ defmodule Penelope.NLP.POSTagger do
 
   alias Penelope.ML.Pipeline
 
-  @type model :: %{
-          tagger: [{atom, any}],
-          featurizer: [{atom, any}]
-        }
+  @type model :: %{pos_tagger: [{atom, any}]}
 
   @doc """
   Fits the tagger model. Custom featurizers may be supplied.
