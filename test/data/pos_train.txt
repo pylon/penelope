@@ -1,0 +1,3 @@
+Bill|is|on|a|boat NNP|VBZ|IN|DT|NN
+I|'m|just|a|bill PRP|VBP|RB|DT|NN
+I|have|too|many|tokens PRP|VBP|RB|DT|JJ

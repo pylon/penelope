@@ -44,8 +44,8 @@ defmodule Mix.Tasks.Word2vec.Compile do
 
       options:
         --partitions:  number of partitions (files) to create, default: 1
-        --size_hint:   index hint for the total number of words
-        --vector_size: number of vectors/word, default: 300
+        --size-hint:   index hint for the total number of words
+        --vector-size: number of vectors/word, default: 300
     """)
   end
 end
