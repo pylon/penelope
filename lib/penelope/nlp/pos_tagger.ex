@@ -32,11 +32,7 @@ defmodule Penelope.NLP.POSTagger do
         ) :: model
   def fit(context, x, y, featurizers \\ [{:pos_featurizer, []}]) do
     pipeline = featurizers ++ [{:crf_tagger, []}]
-
-    %{
-      tagger: Pipeline.fit(context, x, y, pipeline),
-      featurizer: featurizers
-    }
+    %{pos_tagger: Pipeline.fit(context, x, y, pipeline)}
   end
 
   @doc """
@@ -53,7 +49,7 @@ defmodule Penelope.NLP.POSTagger do
         ]
   def tag(model, context, tokens) do
     [{tags, _probability}] =
-      Pipeline.predict_sequence(model.tagger, context, [tokens])
+      Pipeline.predict_sequence(model.pos_tagger, context, [tokens])
 
     Enum.zip(tokens, tags)
   end
@@ -62,21 +58,13 @@ defmodule Penelope.NLP.POSTagger do
   Imports parameters from a serialized model.
   """
   @spec compile(params :: map) :: model
-  def compile(params) do
-    %{
-      tagger: Pipeline.compile(params["tagger"]),
-      featurizer: Pipeline.compile(params["featurizer"])
-    }
-  end
+  def compile(params),
+    do: %{pos_tagger: Pipeline.compile(params["pos_tagger"])}
 
   @doc """
   Exports a runtime model to a serializable data structure.
   """
   @spec export(model :: model) :: map
-  def export(model) do
-    %{
-      "tagger" => Pipeline.export(model.tagger),
-      "featurizer" => Pipeline.export(model.featurizer)
-    }
-  end
+  def export(model),
+    do: %{"pos_tagger" => Pipeline.export(model.pos_tagger)}
 end
