@@ -9,7 +9,7 @@ Elixir, which can be used for many ML/NLP applications.
 
 ## Status
 [![Hex](http://img.shields.io/hexpm/v/penelope.svg?style=flat)](https://hex.pm/packages/penelope)
-[![Test](http://circleci-badges-max.herokuapp.com/img/pylon/penelope?token=:circle-ci-token)](https://circleci.com/gh/pylon/penelope)
+[![CircleCI](https://circleci.com/gh/pylon/penelope.svg?style=shield)](https://circleci.com/gh/pylon/penelope)
 [![Coverage](https://coveralls.io/repos/github/pylon/penelope/badge.svg)](https://coveralls.io/github/pylon/penelope)
 
 The API reference is available [here](https://hexdocs.pm/penelope/).
