@@ -11,9 +11,9 @@ defmodule Penelope.ML.SVM.ClassifierTest do
   import ExUnitProperties
   import Penelope.TestUtility
 
-  alias StreamData, as: Gen
-  alias Penelope.ML.Vector
   alias Penelope.ML.SVM.Classifier
+  alias Penelope.ML.Vector
+  alias StreamData, as: Gen
 
   # embarrassingly separable training data
   @x_train [

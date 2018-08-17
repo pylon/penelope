@@ -1,8 +1,8 @@
 defmodule Penelope.ML.Text.CountVectorizerTest do
   use ExUnit.Case, async: true
 
-  alias Penelope.ML.Vector
   alias Penelope.ML.Text.CountVectorizer
+  alias Penelope.ML.Vector
 
   test "transform" do
     x = [
