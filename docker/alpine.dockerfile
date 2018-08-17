@@ -1,4 +1,4 @@
-FROM bitwalker/alpine-elixir:1.6.0
+FROM bitwalker/alpine-elixir:1.7.2
 
 RUN apk --no-cache --update upgrade && \
     apk --no-cache add busybox make g++ linux-headers openblas-dev
