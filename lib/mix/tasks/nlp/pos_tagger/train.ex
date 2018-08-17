@@ -14,8 +14,8 @@ defmodule Mix.Tasks.Nlp.PosTagger.Train do
 
   use Mix.Task
 
-  alias Penelope.NLP.POSTagger
   alias Mix.Tasks.Nlp.PosTagger.TaggerUtils
+  alias Penelope.NLP.POSTagger
 
   require Logger
 

@@ -18,8 +18,8 @@ defmodule Penelope.ML.Feature.MergeFeaturizer do
   ```
   """
 
-  alias Penelope.ML.Registry
   alias Penelope.ML.Pipeline
+  alias Penelope.ML.Registry
 
   @doc """
   fits each of the configured inner featurizers

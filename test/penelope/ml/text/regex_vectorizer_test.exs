@@ -1,8 +1,8 @@
 defmodule Penelope.ML.Text.RegexVectorizerTest do
   use ExUnit.Case, async: true
 
-  alias Penelope.ML.Vector
   alias Penelope.ML.Text.RegexVectorizer
+  alias Penelope.ML.Vector
 
   test "transform" do
     x = ["", "sentence matches", "sentence does not match"]

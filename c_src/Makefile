@@ -1,8 +1,8 @@
 ERLANG_PATH ?= $(shell erl -eval 'io:format("~s", [lists:concat([code:root_dir(), "/erts-", erlang:system_info(version)])])' -s init stop -noshell)
 CC           = g++
 CFLAGS       = -Wall -O3 -fpic -Wl,-undefined,dynamic_lookup -shared \
-               -I$(ERLANG_PATH)/include -L$(ERLANG_PATH)/lib
-LIBS         = -lerts
+               -I$(ERLANG_PATH)/include
+LIBS         =
 OBJDIR       = ../obj
 OUTDIR       = ../priv
 

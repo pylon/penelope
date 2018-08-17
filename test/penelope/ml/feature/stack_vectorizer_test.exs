@@ -1,8 +1,8 @@
 defmodule Penelope.ML.Feature.StackVectorizerTest do
   use ExUnit.Case, async: true
 
-  alias Penelope.ML.Vector
   alias Penelope.ML.Feature.StackVectorizer
+  alias Penelope.ML.Vector
 
   @x_train Enum.map([3, 2, 1, 3, 2, 1], &Vector.from_list([&1]))
   @y_train ["c", "b", "a", "c", "b", "a"]

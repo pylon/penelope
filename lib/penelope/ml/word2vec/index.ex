@@ -150,11 +150,7 @@ defmodule Penelope.ML.Word2vec.Index do
     try do
       :e2qc.setup(name, size: cache_size)
     rescue
-      e in ErlangError ->
-        case e do
-          %ErlangError{original: :already_exists} -> :ok
-          _ -> reraise e, System.stacktrace()
-        end
+      _ in ErlangError -> :ok
     end
 
     %Index{

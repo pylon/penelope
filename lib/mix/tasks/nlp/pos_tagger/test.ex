@@ -7,8 +7,8 @@ defmodule Mix.Tasks.Nlp.PosTagger.Test do
 
   use Mix.Task
 
-  alias Penelope.NLP.POSTagger
   alias Mix.Tasks.Nlp.PosTagger.TaggerUtils
+  alias Penelope.NLP.POSTagger
 
   require Logger
 

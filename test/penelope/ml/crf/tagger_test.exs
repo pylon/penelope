@@ -11,8 +11,8 @@ defmodule Penelope.ML.CRF.TaggerTest do
   import ExUnitProperties
   import Penelope.TestUtility
 
-  alias StreamData, as: Gen
   alias Penelope.ML.CRF.Tagger
+  alias StreamData, as: Gen
 
   @x_train [
     [],

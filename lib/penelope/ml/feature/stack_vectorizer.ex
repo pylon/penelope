@@ -19,9 +19,9 @@ defmodule Penelope.ML.Feature.StackVectorizer do
   ```
   """
 
-  alias Penelope.ML.Vector
-  alias Penelope.ML.Registry
   alias Penelope.ML.Pipeline
+  alias Penelope.ML.Registry
+  alias Penelope.ML.Vector
 
   @doc """
   fits each of the configured inner vectorizers

@@ -5,9 +5,11 @@ defmodule Penelope.Mixfile do
     [
       app: :penelope,
       name: "Penelope",
-      version: "0.4.4",
-      elixir: "~> 1.6",
-      compilers: ["nif" | Mix.compilers()],
+      version: "0.4.5",
+      elixir: "~> 1.7",
+      compilers: [:elixir_make] ++ Mix.compilers(),
+      make_cwd: "c_src",
+      make_clean: ["clean"],
       aliases: [clean: ["clean", "clean.nif"]],
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -49,12 +51,14 @@ defmodule Penelope.Mixfile do
   defp deps do
     [
       {:e2qc, "~> 1.2"},
+      {:poison, "~> 3.0 or ~> 4.0", optional: true},
       {:stream_data, "~> 0.3", only: [:test]},
-      {:excoveralls, "~> 0.8", only: :test},
-      {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.9", only: :test},
+      {:elixir_make, "~> 0.4", runtime: false},
+      {:credo, "~> 0.10", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:benchee, "~> 0.9", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.18", only: :dev, runtime: false}
+      {:benchee, "~> 0.13", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 
@@ -74,19 +78,5 @@ defmodule Penelope.Mixfile do
         "Docs" => "http://hexdocs.pm/penelope/"
       }
     ]
-  end
-end
-
-defmodule Mix.Tasks.Compile.Nif do
-  def run(_args) do
-    {result, _errcode} = System.cmd("make", ["-C", "c_src"])
-    IO.binwrite(result)
-  end
-end
-
-defmodule Mix.Tasks.Clean.Nif do
-  def run(_args) do
-    {result, _errcode} = System.cmd("make", ["-C", "c_src", "clean"])
-    IO.binwrite(result)
   end
 end
