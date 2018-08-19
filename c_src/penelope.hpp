@@ -14,7 +14,12 @@
 /*-------------------[      Project Include Files      ]-------------------*/
 /*-------------------[      Macros/Constants/Types     ]-------------------*/
 #define CHECK(result, ...)                                                 \
-   ((result) ?: (throw NifError(__VA_ARGS__)))
+   ({                                                                      \
+      auto r = (result);                                                   \
+      if (!r)                                                              \
+         throw NifError(__VA_ARGS__);                                      \
+      r;                                                                   \
+   })
 #define CHECKALLOC(result)                                                 \
    CHECK(result, "alloc_failed");
 /*-------------------[             Classes             ]-------------------*/
