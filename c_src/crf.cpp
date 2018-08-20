@@ -223,7 +223,7 @@ ERL_NIF_TERM nif_crf_export (
       CHECK(size != -1, "load_failed");
       CHECK(fseek(file, 0, SEEK_SET) == 0, "load_failed");
       CHECKALLOC(enif_alloc_binary(size, &buffer));
-      CHECK(fread(buffer.data, 1, size, file) == size, "load_failed");
+      CHECK((long)fread(buffer.data, 1, size, file) == size, "load_failed");
       // add the model buffer to a map
       ERL_NIF_TERM key   = enif_make_atom(env, "model");
       ERL_NIF_TERM value = enif_make_binary(env, &buffer);
@@ -682,7 +682,7 @@ void erl2crf_train_data(
    // transfer each training example to the CRF data structure
    unsigned m;
    CHECK(enif_get_list_length(erl_env, x, &m), "invalid_x");
-   for (int i = 0; i < m; i++) {
+   for (int i = 0; i < (int)m; i++) {
       ERL_NIF_TERM x_head, y_head;
       CHECK(enif_get_list_cell(erl_env, x, &x_head, &x), "invalid_x");
       CHECK(enif_get_list_cell(erl_env, y, &y_head, &y), "invalid_y");
@@ -726,7 +726,7 @@ void erl2crf_train_instance(
    unsigned n;
    CHECK(enif_get_list_length(erl_env, x_i, &n), "invalid_x_i");
    crfsuite_instance_init_n(crf_instance, n);
-   for (int i = 0; i < n; i++) {
+   for (int i = 0; i < (int)n; i++) {
       ERL_NIF_TERM x_i_head, y_i_head;
       CHECK(enif_get_list_cell(erl_env, x_i, &x_i_head, &x_i), "invalid_x_i");
       CHECK(enif_get_list_cell(erl_env, y_i, &y_i_head, &y_i), "invalid_y_i");
@@ -751,7 +751,7 @@ void erl2crf_predict_instance(
    unsigned n;
    CHECK(enif_get_list_length(erl_env, x_i, &n), "invalid_x_i");
    crfsuite_instance_init_n(crf_instance, n);
-   for (int i = 0; i < n; i++) {
+   for (int i = 0; i < (int)n; i++) {
       ERL_NIF_TERM x_i_head;
       CHECK(enif_get_list_cell(erl_env, x_i, &x_i_head, &x_i), "invalid_x_i");
       erl2crf_features(erl_env, x_i_head, crf_attrs, crf_instance, i, false);
@@ -788,7 +788,7 @@ void erl2crf_features(
       "invalid_features");
    // transfer the feature map entries
    try {
-      for (int i = 0; i < n; i++) {
+      for (int i = 0; i < (int)n; i++) {
          ERL_NIF_TERM k, v;
          CHECKALLOC(enif_map_iterator_get_pair(erl_env, &iterator, &k, &v));
          erl2crf_feature(erl_env, k, v, crf_attrs, crf_item, training);
