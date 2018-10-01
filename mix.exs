@@ -53,7 +53,7 @@ defmodule Penelope.Mixfile do
       {:e2qc, "~> 1.2"},
       {:poison, "~> 3.0 or ~> 4.0", optional: true},
       {:stream_data, "~> 0.3", only: [:test]},
-      {:excoveralls, "~> 0.9", only: :test},
+      {:excoveralls, "~> 0.10", only: :test},
       {:elixir_make, "~> 0.4", runtime: false},
       {:credo, "~> 0.10", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
