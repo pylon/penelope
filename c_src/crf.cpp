@@ -10,6 +10,7 @@
 /*-------------------[      Library Include Files      ]-------------------*/
 #include <math.h>
 #include <unistd.h>
+#include <iostream>
 /*-------------------[      Project Include Files      ]-------------------*/
 #include "deps/crfsuite/include/crfsuite.h"
 #include "penelope.hpp"
@@ -106,6 +107,26 @@ static ERL_NIF_TERM crf2erl_labels(
    int*                   crf_path,
    int                    n);
 /*-------------------[         Implementation          ]-------------------*/
+void replaceAll(std::string& str, const std::string& from, const std::string& to) {
+    if(from.empty())
+        return;
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
+}
+
+static int message_callback(void *instance, const char *_format, va_list args)
+{
+  std::string format = _format;
+  replaceAll(format, "\n", "\r\n");
+
+    vfprintf(stdout, format.c_str(), args);
+    fflush(stdout);
+    return 0;
+}
+
 /*-----------< FUNCTION: nif_crf_init >--------------------------------------
 // Purpose:    crf module initialization
 // Parameters: env - erlang environment
@@ -382,6 +403,8 @@ crfsuite_trainer_t* erl2crf_trainer (
    try {
       ERL_NIF_TERM key;
       ERL_NIF_TERM value;
+      ERL_NIF_TERM is_verbose_key;
+      ERL_NIF_TERM is_verbose;
       // retrieve the algorithm name
       key = enif_make_atom(env, "algorithm");
       CHECK(enif_get_map_value(env, options, key, &value),
@@ -408,6 +431,13 @@ crfsuite_trainer_t* erl2crf_trainer (
          "train/crf1d/%s",
          algorithm);
       CHECKALLOC(crfsuite_create_instance(trainer_id, (void**)&trainer));
+
+      is_verbose_key = enif_make_atom(env, "verbose");
+      enif_get_map_value(env, options, is_verbose_key, &is_verbose);
+
+      if (enif_is_identical(is_verbose, enif_make_atom(env, "true"))) {
+        trainer->set_message_callback(trainer, stderr, message_callback);
+      }
    } catch (NifError& e) {
       if (trainer != NULL)
          trainer->release(trainer);
@@ -554,6 +584,11 @@ void erl2crf_params (
          env,
          options,
          "gamma",
+         params);
+      erl2crf_param_bool(
+         env,
+         options,
+         "verbose",
          params);
       params->release(params);
    } catch (NifError& e) {

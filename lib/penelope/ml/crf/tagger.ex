@@ -50,6 +50,7 @@ defmodule Penelope.ML.CRF.Tagger do
   |`averaging`               |true                |
   |`variance`                |1.0                 |
   |`gamma`                   |1.0                 |
+  |`verbose`                 |false               |
 
   algorithms:
   `:lbfgs`, `:l2sgd`, `:ap`, `:pa`, `:arow`
@@ -170,6 +171,7 @@ defmodule Penelope.ML.CRF.Tagger do
     averaging? = Keyword.get(options, :averaging?, true)
     variance = Keyword.get(options, :variance, 1.0) / 1
     gamma = Keyword.get(options, :gamma, 1.0) / 1
+    verbose = Keyword.get(options, :verbose, false)
 
     %{
       algorithm: algorithm,
@@ -195,7 +197,8 @@ defmodule Penelope.ML.CRF.Tagger do
       error_sensitive?: error_sensitive?,
       averaging?: averaging?,
       variance: variance,
-      gamma: gamma
+      gamma: gamma,
+      verbose: verbose
     }
   end
 
