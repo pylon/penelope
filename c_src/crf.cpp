@@ -337,6 +337,8 @@ ERL_NIF_TERM nif_crf_predict (
          "viterbi_failed");
       CHECK(crf_tagger->lognorm(crf_tagger, &lognorm) == 0,
          "lognorm_failed");
+      CHECK(!isnan(score), "score_is_nan");
+      CHECK(!isnan(lognorm), "lognorm_is_nan");
       // return the predicted sequence and its probability
       result = enif_make_tuple2(
          env,
