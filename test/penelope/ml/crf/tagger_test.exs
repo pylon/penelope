@@ -41,31 +41,33 @@ defmodule Penelope.ML.CRF.TaggerTest do
     algorithms = [:lbfgs, :l2sgd, :ap, :pa, :arow]
     linesearches = [:more_thuente, :backtracking, :strong_backtracking]
 
-    check all algorithm <- Gen.one_of(algorithms),
-              min_freq <- Gen.float(min: 1.0e-5, max: 1),
-              all_states? <- Gen.boolean(),
-              all_transitions? <- Gen.boolean(),
-              c1 <- Gen.float(min: 1.0e-5, max: 1),
-              c2 <- Gen.float(min: 1.0e-5, max: 1),
-              max_iter <- Gen.positive_integer(),
-              num_memories <- Gen.positive_integer(),
-              epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
-              period <- Gen.positive_integer(),
-              delta <- Gen.float(min: 0, max: 1),
-              linesearch <- Gen.one_of(linesearches),
-              max_linesearch <- Gen.positive_integer(),
-              calibration_eta <- Gen.float(min: 1.0e-5, max: 0.5),
-              calibration_rate <- Gen.float(min: 0, max: 1),
-              calibration_samples <- Gen.positive_integer(),
-              calibration_candidates <- Gen.positive_integer(),
-              calibration_max_trials <- Gen.positive_integer(),
-              pa_type <- Gen.integer(0..2),
-              c <- Gen.float(min: 1.0e-5),
-              error_sensitive? <- Gen.boolean(),
-              averaging? <- Gen.boolean(),
-              variance <- Gen.float(min: 0, max: 1),
-              gamma <- Gen.float(min: 1.0e-5),
-              verbose <- Gen.boolean() do
+    check all(
+            algorithm <- Gen.one_of(algorithms),
+            min_freq <- Gen.float(min: 1.0e-5, max: 1),
+            all_states? <- Gen.boolean(),
+            all_transitions? <- Gen.boolean(),
+            c1 <- Gen.float(min: 1.0e-5, max: 1),
+            c2 <- Gen.float(min: 1.0e-5, max: 1),
+            max_iter <- Gen.positive_integer(),
+            num_memories <- Gen.positive_integer(),
+            epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
+            period <- Gen.positive_integer(),
+            delta <- Gen.float(min: 0, max: 1),
+            linesearch <- Gen.one_of(linesearches),
+            max_linesearch <- Gen.positive_integer(),
+            calibration_eta <- Gen.float(min: 1.0e-5, max: 0.5),
+            calibration_rate <- Gen.float(min: 0, max: 1),
+            calibration_samples <- Gen.positive_integer(),
+            calibration_candidates <- Gen.positive_integer(),
+            calibration_max_trials <- Gen.positive_integer(),
+            pa_type <- Gen.integer(0..2),
+            c <- Gen.float(min: 1.0e-5),
+            error_sensitive? <- Gen.boolean(),
+            averaging? <- Gen.boolean(),
+            variance <- Gen.float(min: 0, max: 1),
+            gamma <- Gen.float(min: 1.0e-5),
+            verbose <- Gen.boolean()
+          ) do
       options = [
         algorithm: algorithm,
         min_freq: min_freq,
@@ -159,7 +161,8 @@ defmodule Penelope.ML.CRF.TaggerTest do
       assert y_prob >= 0 and y_prob <= 1
     end
 
-    [{y_pred, y_prob}] = Tagger.predict_sequence(model, %{}, [["some", "unseen", "input"]])
+    [{y_pred, y_prob}] =
+      Tagger.predict_sequence(model, %{}, [["some", "unseen", "input"]])
 
     for y <- y_pred do
       assert y in ["o", "b_num", "i_num", "b_fruit", "i_fruit"]
