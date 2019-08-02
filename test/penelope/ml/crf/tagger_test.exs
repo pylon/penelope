@@ -64,7 +64,8 @@ defmodule Penelope.ML.CRF.TaggerTest do
               error_sensitive? <- Gen.boolean(),
               averaging? <- Gen.boolean(),
               variance <- Gen.float(min: 0, max: 1),
-              gamma <- Gen.float(min: 1.0e-5) do
+              gamma <- Gen.float(min: 1.0e-5),
+              verbose <- Gen.boolean() do
       options = [
         algorithm: algorithm,
         min_freq: min_freq,
@@ -89,7 +90,8 @@ defmodule Penelope.ML.CRF.TaggerTest do
         error_sensitive?: error_sensitive?,
         averaging?: averaging?,
         variance: variance,
-        gamma: gamma
+        gamma: gamma,
+        verbose: verbose
       ]
 
       model = Tagger.fit(%{}, @x_train, @y_train, options)
@@ -157,8 +159,7 @@ defmodule Penelope.ML.CRF.TaggerTest do
       assert y_prob >= 0 and y_prob <= 1
     end
 
-    [{y_pred, y_prob}] =
-      Tagger.predict_sequence(model, %{}, [["some", "unseen", "input"]])
+    [{y_pred, y_prob}] = Tagger.predict_sequence(model, %{}, [["some", "unseen", "input"]])
 
     for y <- y_pred do
       assert y in ["o", "b_num", "i_num", "b_fruit", "i_fruit"]
