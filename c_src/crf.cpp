@@ -107,24 +107,32 @@ static ERL_NIF_TERM crf2erl_labels(
    int*                   crf_path,
    int                    n);
 /*-------------------[         Implementation          ]-------------------*/
-void replaceAll(std::string& str, const std::string& from, const std::string& to) {
-    if(from.empty())
-        return;
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
-    }
-}
-
 static int message_callback(void *instance, const char *_format, va_list args)
 {
-  std::string format = _format;
-  replaceAll(format, "\n", "\r\n");
+   char *format = strdup(_format);
 
-    vfprintf(stdout, format.c_str(), args);
-    fflush(stdout);
-    return 0;
+   if (strlen(format) == 1 && strncmp(format, "\n", 1) == 0)
+      printf("\r\n");
+   else if (format != NULL) {
+      char *token = strtok(format, "\r\n");
+
+      while (token) {
+         if (*token) {
+            vprintf(token, args);
+
+            if (strlen(_format) != strlen(token)) {
+               printf("\r\n");
+            }
+         }
+
+         token = strtok(NULL, "\r\n");
+      }
+
+      fflush(stdout);
+      free(format);
+   }
+
+   return 0;
 }
 
 /*-----------< FUNCTION: nif_crf_init >--------------------------------------
