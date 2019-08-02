@@ -64,11 +64,13 @@ defmodule Penelope.ML.Linear.ClassifierTest do
       Classifier.fit(%{}, @x_train, @y_train, epsilon: -1)
     end)
 
-    check all solver <- Gen.one_of(@solvers),
-              c <- Gen.float(min: 1.0e-5),
-              weights <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
-              epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
-              bias <- Gen.float(min: -1, max: 1) do
+    check all(
+            solver <- Gen.one_of(@solvers),
+            c <- Gen.float(min: 1.0e-5),
+            weights <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
+            epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
+            bias <- Gen.float(min: -1, max: 1)
+          ) do
       options = [
         solver: solver,
         c: c,

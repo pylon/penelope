@@ -3,7 +3,7 @@ defmodule Penelope.ML.Word2vec.IndexTest do
   These tests verify the word2vec index module.
   """
 
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Penelope.ML.Vector, as: Vector
   alias Penelope.ML.Word2vec.Index, as: Index

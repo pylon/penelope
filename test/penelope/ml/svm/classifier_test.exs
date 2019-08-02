@@ -65,16 +65,18 @@ defmodule Penelope.ML.SVM.ClassifierTest do
       Classifier.fit(%{}, @x_train, @y_train, cache_size: -1)
     end)
 
-    check all kernel <- Gen.one_of([:linear, :rbf, :poly, :sigmoid]),
-              degree <- Gen.positive_integer(),
-              gamma <- Gen.float(min: 1.0e-5),
-              coef0 <- Gen.float(min: 1.0e-5, max: 1),
-              c <- Gen.float(min: 1.0e-5, max: 1000),
-              weights <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
-              epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
-              cache_size <- Gen.integer(1..16),
-              shrinking? <- Gen.boolean(),
-              probability? <- Gen.boolean() do
+    check all(
+            kernel <- Gen.one_of([:linear, :rbf, :poly, :sigmoid]),
+            degree <- Gen.positive_integer(),
+            gamma <- Gen.float(min: 1.0e-5),
+            coef0 <- Gen.float(min: 1.0e-5, max: 1),
+            c <- Gen.float(min: 1.0e-5, max: 1000),
+            weights <- Gen.list_of(Gen.float(min: 1.0e-5), length: 3),
+            epsilon <- Gen.float(min: 1.0e-5, max: 0.5),
+            cache_size <- Gen.integer(1..16),
+            shrinking? <- Gen.boolean(),
+            probability? <- Gen.boolean()
+          ) do
       options = [
         kernel: kernel,
         degree: degree,

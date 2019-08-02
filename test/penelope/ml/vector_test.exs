@@ -53,8 +53,10 @@ defmodule Penelope.ML.VectorTest do
     assert scale(from_list([1, 2]), 1) === from_list([1, 2])
     assert scale(from_list([1, 2]), 2) === from_list([2, 4])
 
-    check all a <- Gen.float(min: 0, max: 1),
-              x <- Gen.list_of(Gen.float(min: 0, max: 1)) do
+    check all(
+            a <- Gen.float(min: 0, max: 1),
+            x <- Gen.list_of(Gen.float(min: 0, max: 1))
+          ) do
       # save the vector to ensure no memory overwrite
       vx = from_list(x)
       vy = scale(vx, a)
@@ -84,9 +86,11 @@ defmodule Penelope.ML.VectorTest do
     assert add(empty(), empty()) === empty()
     assert add(from_list([1, 2]), from_list([3, 4])) === from_list([4, 6])
 
-    check all n <- Gen.positive_integer(),
-              x <- Gen.list_of(Gen.float(min: 0, max: 1), length: n),
-              y <- Gen.list_of(Gen.float(min: 0, max: 1), length: n) do
+    check all(
+            n <- Gen.positive_integer(),
+            x <- Gen.list_of(Gen.float(min: 0, max: 1), length: n),
+            y <- Gen.list_of(Gen.float(min: 0, max: 1), length: n)
+          ) do
       # save the vectors to ensure no memory overwrite
       vx = from_list(x)
       vy = from_list(y)
@@ -120,10 +124,12 @@ defmodule Penelope.ML.VectorTest do
     assert scale_add(from_list([1, 2]), 2, from_list([3, 4])) ===
              from_list([7, 10])
 
-    check all a <- Gen.float(min: 0, max: 1),
-              n <- Gen.positive_integer(),
-              x <- Gen.list_of(Gen.float(min: 0, max: 1), length: n),
-              y <- Gen.list_of(Gen.float(min: 0, max: 1), length: n) do
+    check all(
+            a <- Gen.float(min: 0, max: 1),
+            n <- Gen.positive_integer(),
+            x <- Gen.list_of(Gen.float(min: 0, max: 1), length: n),
+            y <- Gen.list_of(Gen.float(min: 0, max: 1), length: n)
+          ) do
       # save the vectors to ensure no memory overwrite
       vx = from_list(x)
       vy = from_list(y)
