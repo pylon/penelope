@@ -5,7 +5,7 @@ defmodule Penelope.Mixfile do
     [
       app: :penelope,
       name: "Penelope",
-      version: "0.4.6",
+      version: "0.5.0",
       elixir: "~> 1.7",
       compilers: [:elixir_make] ++ Mix.compilers(),
       make_cwd: "c_src",
